@@ -268,7 +268,7 @@ impl Default for MyGraphState {
                         InputSocketType { name: "v2".into(), ty: MyDataType::Vec3, default: None },
                     ],
                     output_sockets: vec![
-                        OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+                        OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
                     ],
                 }),
                 (MyNodeTemplate::Main, NodeTypeInfo {
@@ -548,11 +548,27 @@ impl eframe::App for NodeGraphExample {
                 }
             }
         }
-        if let Some(_node) = self.user_state.active_node {
+        if let Some(node_id) = self.user_state.active_node {
+            let mut topological_order = Vec::new();
+            fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
+                for input_id in graph[node_id].input_ids() {
+                    if let Some(other_output_id) = graph.connection(input_id) {
+                        postorder_traversal(graph, graph[other_output_id].node, collect);
+                    }
+                }
+                collect.push(node_id);
+            }
+            postorder_traversal(&self.state.graph, node_id, &mut topological_order);
+
+            let mut text = String::new();
+            for nid in topological_order {
+                text += &format!("{}\n", self.state.graph[nid].label);
+            }
+
             ctx.debug_painter().text(
                 egui::pos2(10.0, 35.0),
                 egui::Align2::LEFT_TOP,
-                "Test",
+                text,
                 TextStyle::Button.resolve(&ctx.style()),
                 egui::Color32::WHITE,
             );
