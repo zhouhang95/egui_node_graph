@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_imports)]
-use std::{borrow::Cow, collections::HashMap, fmt::format};
+use std::{borrow::Cow, collections::HashMap, fmt::format, ops::Index};
 
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph::*;
@@ -564,13 +564,34 @@ impl eframe::App for NodeGraphExample {
             }
             postorder_traversal(&self.state.graph, node_id, &mut topological_order);
 
+            let mut indexs = HashMap::new();
+            let mut cg_node_names = Vec::new();
+            for (i, nid) in topological_order.iter().enumerate() {
+                indexs.insert(nid, i);
+                let label = &self.state.graph[*nid].label;
+                let cg_node_name = format!("_{}_{}", i, label);
+                cg_node_names.push(cg_node_name.clone());
+            }
             let mut text = String::new();
             for (i, nid) in topological_order.iter().enumerate() {
                 let label = &self.state.graph[*nid].label;
-                let cg_node_name = format!("_{}_{}", i, label);
+                let cg_node_name = &cg_node_names[i];
                 let my_node_type = self.state.graph[*nid].user_data.template;
                 let output_sockets = &self.user_state.node_type_infos[&my_node_type].output_sockets;
-                let params = String::new();
+                let mut params = String::new();
+                let mut is_first = true;
+                for input_id in self.state.graph[*nid].input_ids() {
+                    if let Some(other_output_id) = self.state.graph.connection(input_id) {
+                        let next_nid = self.state.graph[other_output_id].node;
+                        let index = indexs[&next_nid];
+                        if is_first {
+                            params += &format!("{}_o0", cg_node_names[index]);
+                        } else {
+                            params += &format!(", {}_o0", cg_node_names[index]);
+                        }
+                        is_first = false;
+                    }
+                }
                 if output_sockets.len() > 0 {
                     let output_type = output_sockets[0].ty;
                     let main_cmd = format!(
