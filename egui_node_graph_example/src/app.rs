@@ -574,7 +574,7 @@ impl eframe::App for NodeGraphExample {
                 if output_sockets.len() > 0 {
                     let output_type = output_sockets[0].ty;
                     let main_cmd = format!(
-                        "{} {}_o0 = {}({})",
+                        "{} {}_o0 = {}({});",
                         match output_type {
                             MyDataType::Scalar => "float ",
                             MyDataType::Vec3 => "float3",
@@ -584,6 +584,16 @@ impl eframe::App for NodeGraphExample {
                         &params,
                     );
                     text += &format!("{}\n", main_cmd);
+                    if i == topological_order.len() - 1 {
+                        match output_type {
+                            MyDataType::Scalar => {
+                                text += &format!("return float4({}_o0, {}_o0, {}_o0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
+                            },
+                            MyDataType::Vec3 => {
+                                text += &format!("return float4({}_o0, 1.0);\n", cg_node_name);
+                            },
+                        }
+                    }
                 }
             }
 
