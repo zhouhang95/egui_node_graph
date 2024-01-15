@@ -553,7 +553,11 @@ impl eframe::App for NodeGraphExample {
             fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
                 for input_id in graph[node_id].input_ids() {
                     if let Some(other_output_id) = graph.connection(input_id) {
-                        postorder_traversal(graph, graph[other_output_id].node, collect);
+                        let next_nid = graph[other_output_id].node;
+                        if collect.contains(&next_nid) {
+                            continue;
+                        }
+                        postorder_traversal(graph, next_nid, collect);
                     }
                 }
                 collect.push(node_id);
