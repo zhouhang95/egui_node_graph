@@ -1,5 +1,5 @@
 #![allow(dead_code, unused_imports)]
-use std::{borrow::Cow, collections::HashMap};
+use std::{borrow::Cow, collections::HashMap, fmt::format};
 
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph::*;
@@ -11,7 +11,7 @@ use egui_node_graph::*;
 /// example, the node data stores the template (i.e. the "type") of the node.
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct MyNodeData {
-    template: MyNodeTemplate,
+    template: MyNodeType,
 }
 
 /// `DataType`s are what defines the possible range of connections when
@@ -99,7 +99,7 @@ impl MyValueType {
 /// library how to convert a NodeTemplate into a Node.
 #[derive(Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
-pub enum MyNodeTemplate {
+pub enum MyNodeType {
     MakeScalar,
     AddScalar,
     SubtractScalar,
@@ -116,29 +116,29 @@ pub enum MyNodeTemplate {
     Saturate3,
 }
 
-pub struct AllMyNodeTemplates;
-impl NodeTemplateIter for AllMyNodeTemplates {
-    type Item = MyNodeTemplate;
+pub struct AllMyNodeTypes;
+impl NodeTemplateIter for AllMyNodeTypes {
+    type Item = MyNodeType;
 
     fn all_kinds(&self) -> Vec<Self::Item> {
         // This function must return a list of node kinds, which the node finder
         // will use to display it to the user. Crates like strum can reduce the
         // boilerplate in enumerating all variants of an enum.
         vec![
-            MyNodeTemplate::MakeScalar,
-            MyNodeTemplate::MakeVector,
-            MyNodeTemplate::AddScalar,
-            MyNodeTemplate::SubtractScalar,
-            MyNodeTemplate::AddVector,
-            MyNodeTemplate::SubtractVector,
-            MyNodeTemplate::VectorTimesScalar,
-            MyNodeTemplate::NormalDirection,
-            MyNodeTemplate::LightDirection,
-            MyNodeTemplate::DotProduct,
-            MyNodeTemplate::Main,
-            MyNodeTemplate::FloatToVector3,
-            MyNodeTemplate::Saturate,
-            MyNodeTemplate::Saturate3,
+            MyNodeType::MakeScalar,
+            MyNodeType::MakeVector,
+            MyNodeType::AddScalar,
+            MyNodeType::SubtractScalar,
+            MyNodeType::AddVector,
+            MyNodeType::SubtractVector,
+            MyNodeType::VectorTimesScalar,
+            MyNodeType::NormalDirection,
+            MyNodeType::LightDirection,
+            MyNodeType::DotProduct,
+            MyNodeType::Main,
+            MyNodeType::FloatToVector3,
+            MyNodeType::Saturate,
+            MyNodeType::Saturate3,
         ]
     }
 }
@@ -159,7 +159,7 @@ pub enum MyResponse {
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub struct MyGraphState {
     pub active_node: Option<NodeId>,
-    node_type_infos: HashMap<MyNodeTemplate, NodeTypeInfo>,
+    node_type_infos: HashMap<MyNodeType, NodeTypeInfo>,
 }
 
 impl Default for MyGraphState {
@@ -167,7 +167,7 @@ impl Default for MyGraphState {
         Self {
             active_node: None,
             node_type_infos: HashMap::from([
-                (MyNodeTemplate::MakeScalar, NodeTypeInfo {
+                (MyNodeType::MakeScalar, NodeTypeInfo {
                     label: "MakeScalar".into(),
                     categories: vec!["Scalar".into()],
                     input_sockets: vec![
@@ -177,7 +177,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
                     ],
                 }),
-                (MyNodeTemplate::AddScalar, NodeTypeInfo {
+                (MyNodeType::AddScalar, NodeTypeInfo {
                     label: "AddScalar".into(),
                     categories: vec!["Scalar".into()],
                     input_sockets: vec![
@@ -188,7 +188,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
                     ],
                 }),
-                (MyNodeTemplate::SubtractScalar, NodeTypeInfo {
+                (MyNodeType::SubtractScalar, NodeTypeInfo {
                     label: "SubtractScalar".into(),
                     categories: vec!["Scalar".into()],
                     input_sockets: vec![
@@ -199,7 +199,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
                     ],
                 }),
-                (MyNodeTemplate::MakeVector, NodeTypeInfo {
+                (MyNodeType::MakeVector, NodeTypeInfo {
                     label: "MakeVector".into(),
                     categories: vec!["VectorOperations".into()],
                     input_sockets: vec![
@@ -211,7 +211,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
                     ],
                 }),
-                (MyNodeTemplate::AddVector, NodeTypeInfo {
+                (MyNodeType::AddVector, NodeTypeInfo {
                     label: "AddVector".into(),
                     categories: vec!["VectorOperations".into()],
                     input_sockets: vec![
@@ -222,7 +222,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
                     ],
                 }),
-                (MyNodeTemplate::SubtractVector, NodeTypeInfo {
+                (MyNodeType::SubtractVector, NodeTypeInfo {
                     label: "SubtractVector".into(),
                     categories: vec!["VectorOperations".into()],
                     input_sockets: vec![
@@ -233,7 +233,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
                     ],
                 }),
-                (MyNodeTemplate::VectorTimesScalar, NodeTypeInfo {
+                (MyNodeType::VectorTimesScalar, NodeTypeInfo {
                     label: "VectorTimesScalar".into(),
                     categories: vec!["VectorOperations".into()],
                     input_sockets: vec![
@@ -244,7 +244,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
                     ],
                 }),
-                (MyNodeTemplate::NormalDirection, NodeTypeInfo {
+                (MyNodeType::NormalDirection, NodeTypeInfo {
                     label: "NormalDirection".into(),
                     categories: vec!["GeometryData".into()],
                     input_sockets: Vec::new(),
@@ -252,7 +252,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
                     ],
                 }),
-                (MyNodeTemplate::LightDirection, NodeTypeInfo {
+                (MyNodeType::LightDirection, NodeTypeInfo {
                     label: "LightDirection".into(),
                     categories: vec!["Lighting".into()],
                     input_sockets: Vec::new(),
@@ -260,7 +260,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
                     ],
                 }),
-                (MyNodeTemplate::DotProduct, NodeTypeInfo {
+                (MyNodeType::DotProduct, NodeTypeInfo {
                     label: "DotProduct".into(),
                     categories: vec!["VectorOperations".into()],
                     input_sockets: vec![
@@ -271,7 +271,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
                     ],
                 }),
-                (MyNodeTemplate::Main, NodeTypeInfo {
+                (MyNodeType::Main, NodeTypeInfo {
                     label: "Main".into(),
                     categories: vec!["Main".into()],
                     input_sockets: vec![
@@ -280,7 +280,7 @@ impl Default for MyGraphState {
                     ],
                     output_sockets: Vec::new(),
                 }),
-                (MyNodeTemplate::FloatToVector3, NodeTypeInfo {
+                (MyNodeType::FloatToVector3, NodeTypeInfo {
                     label: "FloatToVector3".into(),
                     categories: vec!["VectorOperations".into()],
                     input_sockets: vec![
@@ -290,7 +290,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
                     ],
                 }),
-                (MyNodeTemplate::Saturate, NodeTypeInfo {
+                (MyNodeType::Saturate, NodeTypeInfo {
                     label: "Saturate".into(),
                     categories: vec!["Arithmetic".into()],
                     input_sockets: vec![
@@ -300,7 +300,7 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
                     ],
                 }),
-                (MyNodeTemplate::Saturate3, NodeTypeInfo {
+                (MyNodeType::Saturate3, NodeTypeInfo {
                     label: "Saturate3".into(),
                     categories: vec!["Arithmetic".into()],
                     input_sockets: vec![
@@ -336,7 +336,7 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
 
 // A trait for the node kinds, which tells the library how to build new nodes
 // from the templates in the node finder
-impl NodeTemplateTrait for MyNodeTemplate {
+impl NodeTemplateTrait for MyNodeType {
     type NodeData = MyNodeData;
     type DataType = MyDataType;
     type ValueType = MyValueType;
@@ -482,7 +482,7 @@ impl NodeDataTrait for MyNodeData {
 
 type MyGraph = Graph<MyNodeData, MyDataType, MyValueType>;
 type MyEditorState =
-    GraphEditorState<MyNodeData, MyDataType, MyValueType, MyNodeTemplate, MyGraphState>;
+    GraphEditorState<MyNodeData, MyDataType, MyValueType, MyNodeType, MyGraphState>;
 
 #[derive(Default)]
 pub struct NodeGraphExample {
@@ -531,7 +531,7 @@ impl eframe::App for NodeGraphExample {
             .show(ctx, |ui| {
                 self.state.draw_graph_editor(
                     ui,
-                    AllMyNodeTemplates,
+                    AllMyNodeTypes,
                     &mut self.user_state,
                     Vec::default(),
                 )
@@ -565,8 +565,26 @@ impl eframe::App for NodeGraphExample {
             postorder_traversal(&self.state.graph, node_id, &mut topological_order);
 
             let mut text = String::new();
-            for nid in topological_order {
-                text += &format!("{}\n", self.state.graph[nid].label);
+            for (i, nid) in topological_order.iter().enumerate() {
+                let label = &self.state.graph[*nid].label;
+                let cg_node_name = format!("_{}_{}", i, label);
+                let my_node_type = self.state.graph[*nid].user_data.template;
+                let output_sockets = &self.user_state.node_type_infos[&my_node_type].output_sockets;
+                let params = String::new();
+                if output_sockets.len() > 0 {
+                    let output_type = output_sockets[0].ty;
+                    let main_cmd = format!(
+                        "{} {}_o0 = {}({})",
+                        match output_type {
+                            MyDataType::Scalar => "float ",
+                            MyDataType::Vec3 => "float3",
+                        },
+                        cg_node_name,
+                        label,
+                        &params,
+                    );
+                    text += &format!("{}\n", main_cmd);
+                }
             }
 
             ctx.debug_painter().text(
