@@ -581,16 +581,24 @@ impl eframe::App for NodeGraphExample {
                 let mut params = String::new();
                 let mut is_first = true;
                 for input_id in self.state.graph[*nid].input_ids() {
+                    if !is_first {
+                        params += ", ";
+                    }
                     if let Some(other_output_id) = self.state.graph.connection(input_id) {
                         let next_nid = self.state.graph[other_output_id].node;
                         let index = indexs[&next_nid];
-                        if is_first {
-                            params += &format!("{}_o0", cg_node_names[index]);
-                        } else {
-                            params += &format!(", {}_o0", cg_node_names[index]);
+                        params += &format!("{}_o0", cg_node_names[index]);
+                    } else {
+                        match self.state.graph[input_id].value {
+                            MyValueType::Vec3 { value } => {
+                                params += &format!("float3({}, {}, {})", value[0], value[1], value[2]);
+                            },
+                            MyValueType::Scalar { value } => {
+                                params += &value.to_string();
+                            },
                         }
-                        is_first = false;
                     }
+                    is_first = false;
                 }
                 if output_sockets.len() > 0 {
                     let output_type = output_sockets[0].ty;
