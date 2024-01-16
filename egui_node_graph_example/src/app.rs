@@ -1,8 +1,10 @@
 #![allow(dead_code, unused_imports)]
-use std::{borrow::Cow, collections::HashMap, fmt::format, ops::Index};
+use std::{borrow::Cow, collections::HashMap, fmt::format, ops::Index, path::PathBuf};
 
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph::*;
+
+use crate::hlsl::*;
 
 // ========= First, define your user data types =============
 
@@ -151,6 +153,7 @@ impl NodeTemplateIter for AllMyNodeTypes {
 pub enum MyResponse {
     SetActiveNode(NodeId),
     ClearActiveNode,
+    ValueChanged,
 }
 
 /// The graph 'global' state. This state struct is passed around to the node and
@@ -402,27 +405,33 @@ impl WidgetValueTrait for MyValueType {
     ) -> Vec<MyResponse> {
         // This trait is used to tell the library which UI to display for the
         // inline parameter widgets.
+        let speed = 0.01;
+        let mut changed = false;
         match self {
             MyValueType::Vec3 { value } => {
                 ui.label(param_name);
                 ui.horizontal(|ui| {
                     ui.label("x");
-                    ui.add(DragValue::new(&mut value[0]));
+                    changed = changed || ui.add(DragValue::new(&mut value[0]).speed(speed)).changed();
                     ui.label("y");
-                    ui.add(DragValue::new(&mut value[1]));
+                    changed = changed || ui.add(DragValue::new(&mut value[1]).speed(speed)).changed();
                     ui.label("z");
-                    ui.add(DragValue::new(&mut value[2]));
+                    changed = changed || ui.add(DragValue::new(&mut value[2]).speed(speed)).changed();
                 });
             }
             MyValueType::Scalar { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
-                    ui.add(DragValue::new(value));
+                    changed = changed || ui.add(DragValue::new(value).speed(speed)).changed();
                 });
             }
         }
         // This allows you to return your responses from the inline widgets.
-        Vec::new()
+        if changed {
+            vec![MyResponse::ValueChanged]
+        } else {
+            Vec::new()
+        }
     }
 }
 
@@ -491,6 +500,8 @@ pub struct NodeGraphExample {
     state: MyEditorState,
 
     user_state: MyGraphState,
+    core_gen_code: String,
+    path_buf: Option<PathBuf>,
 }
 
 #[cfg(feature = "persistence")]
@@ -512,6 +523,104 @@ impl NodeGraphExample {
     }
 }
 
+fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
+    for input_id in graph[node_id].input_ids() {
+        if let Some(other_output_id) = graph.connection(input_id) {
+            let next_nid = graph[other_output_id].node;
+            if collect.contains(&next_nid) {
+                continue;
+            }
+            postorder_traversal(graph, next_nid, collect);
+        }
+    }
+    collect.push(node_id);
+}
+
+fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeType, NodeTypeInfo>) -> String {
+    let mut topological_order = Vec::new();
+    postorder_traversal(graph, node_id, &mut topological_order);
+    let mut indexs = HashMap::new();
+    let mut cg_node_names = Vec::new();
+    for (i, nid) in topological_order.iter().enumerate() {
+        indexs.insert(nid, i);
+        let label = &graph[*nid].label;
+        let cg_node_name = format!("_{}_{}", i, label);
+        cg_node_names.push(cg_node_name.clone());
+    }
+    let mut text = String::new();
+    for (i, nid) in topological_order.iter().enumerate() {
+        let label = &graph[*nid].label;
+        let cg_node_name = &cg_node_names[i];
+        let my_node_type = graph[*nid].user_data.template;
+        let output_sockets = &node_type_infos[&my_node_type].output_sockets;
+        let mut params = String::new();
+        let mut is_first = true;
+        for input_id in graph[*nid].input_ids() {
+            if !is_first {
+                params += ", ";
+            }
+            if let Some(other_output_id) = graph.connection(input_id) {
+                let next_nid = graph[other_output_id].node;
+                let index = indexs[&next_nid];
+                params += &format!("{}_o0", cg_node_names[index]);
+            } else {
+                match graph[input_id].value {
+                    MyValueType::Vec3 { value } => {
+                        params += &format!("float3({}, {}, {})", value[0], value[1], value[2]);
+                    },
+                    MyValueType::Scalar { value } => {
+                        params += &value.to_string();
+                    },
+                }
+            }
+            is_first = false;
+        }
+        if output_sockets.len() > 0 {
+            let output_type = output_sockets[0].ty;
+            let main_cmd = format!(
+                "{} {}_o0 = {}({});",
+                match output_type {
+                    MyDataType::Scalar => "float ",
+                    MyDataType::Vec3 => "float3",
+                },
+                cg_node_name,
+                label,
+                &params,
+            );
+            text += &format!("{}\n", main_cmd);
+            if i == topological_order.len() - 1 {
+                match output_type {
+                    MyDataType::Scalar => {
+                        text += &format!("return float4({}_o0, {}_o0, {}_o0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
+                    },
+                    MyDataType::Vec3 => {
+                        text += &format!("return float4({}_o0, 1.0);\n", cg_node_name);
+                    },
+                }
+            }
+        } else {
+            let main_cmd = format!(
+                "return {}({});",
+                label,
+                &params,
+            );
+            text += &format!("{}\n", main_cmd);
+        }
+    }
+    text
+}
+
+impl NodeGraphExample {
+    fn save_fx_file(&self) {
+        if let Some(p) = &self.path_buf {
+            let mut fx = String::new();
+            fx += HLSL_0;
+            fx += &self.core_gen_code;
+            fx += HLSL_1;
+            std::fs::write(p, fx).unwrap();
+        }
+    }
+}
 impl eframe::App for NodeGraphExample {
     #[cfg(feature = "persistence")]
     /// If the persistence function is enabled,
@@ -524,7 +633,26 @@ impl eframe::App for NodeGraphExample {
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             egui::menu::bar(ui, |ui| {
-                egui::widgets::global_dark_light_mode_switch(ui);
+                if ui.button("Save Fx").clicked() {
+                    if self.core_gen_code.len() > 0 {
+                        if self.path_buf.is_none() {
+                            self.path_buf = rfd::FileDialog::new()
+                                .add_filter("MME FX", &["fx"])
+                                .save_file();
+                        }
+                        self.save_fx_file();
+                    }
+                    ui.close_menu();
+                }
+                if ui.button("Save Fx As ...").clicked() {
+                    if self.core_gen_code.len() > 0 {
+                        self.path_buf = rfd::FileDialog::new()
+                            .add_filter("MME FX", &["fx"])
+                            .save_file();
+                        self.save_fx_file();
+                    }
+                    ui.close_menu();
+                }
             });
         });
         let graph_response = egui::CentralPanel::default()
@@ -541,106 +669,34 @@ impl eframe::App for NodeGraphExample {
             // Here, we ignore all other graph events. But you may find
             // some use for them. For example, by playing a sound when a new
             // connection is created
-            if let NodeResponse::User(user_event) = node_response {
-                match user_event {
-                    MyResponse::SetActiveNode(node) => self.user_state.active_node = Some(node),
-                    MyResponse::ClearActiveNode => self.user_state.active_node = None,
-                }
-            }
-        }
-        if let Some(node_id) = self.user_state.active_node {
-            let mut topological_order = Vec::new();
-            fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
-                for input_id in graph[node_id].input_ids() {
-                    if let Some(other_output_id) = graph.connection(input_id) {
-                        let next_nid = graph[other_output_id].node;
-                        if collect.contains(&next_nid) {
-                            continue;
-                        }
-                        postorder_traversal(graph, next_nid, collect);
-                    }
-                }
-                collect.push(node_id);
-            }
-            postorder_traversal(&self.state.graph, node_id, &mut topological_order);
-
-            let mut indexs = HashMap::new();
-            let mut cg_node_names = Vec::new();
-            for (i, nid) in topological_order.iter().enumerate() {
-                indexs.insert(nid, i);
-                let label = &self.state.graph[*nid].label;
-                let cg_node_name = format!("_{}_{}", i, label);
-                cg_node_names.push(cg_node_name.clone());
-            }
-            let mut text = String::new();
-            for (i, nid) in topological_order.iter().enumerate() {
-                let label = &self.state.graph[*nid].label;
-                let cg_node_name = &cg_node_names[i];
-                let my_node_type = self.state.graph[*nid].user_data.template;
-                let output_sockets = &self.user_state.node_type_infos[&my_node_type].output_sockets;
-                let mut params = String::new();
-                let mut is_first = true;
-                for input_id in self.state.graph[*nid].input_ids() {
-                    if !is_first {
-                        params += ", ";
-                    }
-                    if let Some(other_output_id) = self.state.graph.connection(input_id) {
-                        let next_nid = self.state.graph[other_output_id].node;
-                        let index = indexs[&next_nid];
-                        params += &format!("{}_o0", cg_node_names[index]);
-                    } else {
-                        match self.state.graph[input_id].value {
-                            MyValueType::Vec3 { value } => {
-                                params += &format!("float3({}, {}, {})", value[0], value[1], value[2]);
-                            },
-                            MyValueType::Scalar { value } => {
-                                params += &value.to_string();
-                            },
-                        }
-                    }
-                    is_first = false;
-                }
-                if output_sockets.len() > 0 {
-                    let output_type = output_sockets[0].ty;
-                    let main_cmd = format!(
-                        "{} {}_o0 = {}({});",
-                        match output_type {
-                            MyDataType::Scalar => "float ",
-                            MyDataType::Vec3 => "float3",
+            match node_response {
+                NodeResponse::User(user_event) => {
+                    match user_event {
+                        MyResponse::SetActiveNode(node) => {
+                            self.user_state.active_node = Some(node);
                         },
-                        cg_node_name,
-                        label,
-                        &params,
-                    );
-                    text += &format!("{}\n", main_cmd);
-                    if i == topological_order.len() - 1 {
-                        match output_type {
-                            MyDataType::Scalar => {
-                                text += &format!("return float4({}_o0, {}_o0, {}_o0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
-                            },
-                            MyDataType::Vec3 => {
-                                text += &format!("return float4({}_o0, 1.0);\n", cg_node_name);
-                            },
-                        }
+                        MyResponse::ClearActiveNode => {
+                            self.user_state.active_node = None;
+                        },
+                        MyResponse::ValueChanged => {},
+                    };
+                    if let Some(node_id) = self.user_state.active_node {
+                        self.core_gen_code = code_gen(&self.state.graph, node_id, &self.user_state.node_type_infos);
+                        self.save_fx_file();
+                    } else {
+                        self.core_gen_code = String::new();
                     }
-                } else {
-                    let main_cmd = format!(
-                        "return {}({});",
-                        label,
-                        &params,
-                    );
-                    text += &format!("{}\n", main_cmd);
-                }
-            }
-
-            ctx.debug_painter().text(
-                egui::pos2(10.0, 35.0),
-                egui::Align2::LEFT_TOP,
-                text,
-                TextStyle::Button.resolve(&ctx.style()),
-                egui::Color32::WHITE,
-            );
+                },
+                _ => {},
+            };
         }
+        ctx.debug_painter().text(
+            egui::pos2(10.0, 35.0),
+            egui::Align2::LEFT_TOP,
+            self.core_gen_code.clone(),
+            TextStyle::Button.resolve(&ctx.style()),
+            egui::Color32::WHITE,
+        );
     }
 }
 
