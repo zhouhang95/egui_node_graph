@@ -615,6 +615,13 @@ impl eframe::App for NodeGraphExample {
                             },
                         }
                     }
+                } else {
+                    let main_cmd = format!(
+                        "return {}({});",
+                        label,
+                        &params,
+                    );
+                    text += &format!("{}\n", main_cmd);
                 }
             }
 
