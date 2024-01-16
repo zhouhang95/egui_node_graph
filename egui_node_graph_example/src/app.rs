@@ -575,6 +575,10 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeTy
             }
             is_first = false;
         }
+        // ad hoc
+        if my_node_type == MyNodeType::NormalDirection {
+            params += "vso.nrm";
+        }
         if output_sockets.len() > 0 {
             let output_type = output_sockets[0].ty;
             let main_cmd = format!(

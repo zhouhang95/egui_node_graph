@@ -18,7 +18,7 @@ float3 lightSpecular    : SPECULAR  < string Object = "Light"; >;
 float4 groundShadowColor : GROUNDSHADOWCOLOR;
 
 
-float3 light_dir: DIRECTIOIN<string Object = "Light";>;
+float3 light_dir: DIRECTION<string Object = "Light";>;
 float3 cam_pos: POSITION<string Object = "Camera";>;
 
 float2 screenSize : VIEWPORTPIXELSIZE;
@@ -43,6 +43,18 @@ float3 MakeVector(float x, float y, float z) {
     return float3(x, y, z);
 }
 
+float3 NormalDirection(float3 v) {
+    return v;
+}
+
+float3 LightDirection() {
+    return -light_dir;
+}
+
+float DotProduct(float3 a, float3 b) {
+    return dot(a, b);
+}
+
 
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
@@ -52,7 +64,7 @@ VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCO
     return vso;
 }
 
-float4 Basic_PS(VS_OUTPUT vso, float3 normal: TEXCOORD2, float3 uv: TEXCOORD1): COLOR0 {
+float4 Basic_PS(VS_OUTPUT vso): COLOR0 {
 "#;
 pub const HLSL_1: &'static str = r#"
 }
