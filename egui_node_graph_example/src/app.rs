@@ -612,6 +612,9 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeTy
 
 impl NodeGraphExample {
     fn save_fx_file(&self) {
+        if self.core_gen_code.is_empty() {
+            return;
+        }
         if let Some(p) = &self.path_buf {
             let mut fx = String::new();
             fx += HLSL_0;
@@ -632,26 +635,20 @@ impl eframe::App for NodeGraphExample {
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
-            egui::menu::bar(ui, |ui| {
+            ui.horizontal(|ui| {
                 if ui.button("Save Fx").clicked() {
-                    if self.core_gen_code.len() > 0 {
-                        if self.path_buf.is_none() {
-                            self.path_buf = rfd::FileDialog::new()
-                                .add_filter("MME FX", &["fx"])
-                                .save_file();
-                        }
-                        self.save_fx_file();
-                    }
-                    ui.close_menu();
-                }
-                if ui.button("Save Fx As ...").clicked() {
-                    if self.core_gen_code.len() > 0 {
+                    if self.path_buf.is_none() {
                         self.path_buf = rfd::FileDialog::new()
                             .add_filter("MME FX", &["fx"])
                             .save_file();
-                        self.save_fx_file();
                     }
-                    ui.close_menu();
+                    self.save_fx_file();
+                }
+                if ui.button("Save Fx As ...").clicked() {
+                    self.path_buf = rfd::FileDialog::new()
+                        .add_filter("MME FX", &["fx"])
+                        .save_file();
+                    self.save_fx_file();
                 }
             });
         });
