@@ -14,11 +14,6 @@ fn main() {
         eframe::NativeOptions::default(),
         Box::new(|cc| {
             cc.egui_ctx.set_visuals(Visuals::dark());
-            #[cfg(feature = "persistence")]
-            {
-                Box::new(NodeGraphExample::new(cc))
-            }
-            #[cfg(not(feature = "persistence"))]
             Box::<NodeGraphExample>::default()
         }),
     )

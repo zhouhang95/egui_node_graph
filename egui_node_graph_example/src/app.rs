@@ -12,7 +12,7 @@ use crate::hlsl::*;
 /// The NodeData holds a custom data struct inside each node. It's useful to
 /// store additional information that doesn't live in parameters. For this
 /// example, the node data stores the template (i.e. the "type") of the node.
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct MyNodeData {
     template: MyNodeType,
 }
@@ -21,12 +21,13 @@ pub struct MyNodeData {
 /// attaching two ports together. The graph UI will make sure to not allow
 /// attaching incompatible datatypes.
 #[derive(PartialEq, Eq, Clone, Copy)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub enum MyDataType {
     Scalar,
     Vec3,
 }
 
+#[derive(serde::Serialize, serde::Deserialize)]
 struct InputSocketType {
     name: String,
     ty: MyDataType,
@@ -44,10 +45,13 @@ impl InputSocketType {
         }
     }
 }
+#[derive(serde::Serialize, serde::Deserialize)]
 struct OutputSocketType {
     name: String,
     ty: MyDataType,
 }
+
+#[derive(serde::Serialize, serde::Deserialize)]
 struct NodeTypeInfo {
     label: String,
     categories: Vec<String>,
@@ -63,7 +67,7 @@ struct NodeTypeInfo {
 /// up to the user code in this example to make sure no parameter is created
 /// with a DataType of Scalar and a ValueType of Vec2.
 #[derive(Copy, Clone, Debug)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub enum MyValueType {
     Vec3 { value: [f32; 3] },
     Scalar { value: f32 },
@@ -110,7 +114,7 @@ impl MyValueType {
 /// will display in the "new node" popup. The user code needs to tell the
 /// library how to convert a NodeTemplate into a Node.
 #[derive(EnumIter, Clone, Copy, PartialEq, Eq, Hash)]
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub enum MyNodeType {
     MakeScalar,
     AddScalar,
@@ -130,6 +134,8 @@ pub enum MyNodeType {
     FMAVector,
     UV0,
     MainTexure2D,
+    MatCapTexure2D,
+    ToonTexure2D,
 }
 
 pub struct AllMyNodeTypes;
@@ -155,7 +161,7 @@ pub enum MyResponse {
 /// The graph 'global' state. This state struct is passed around to the node and
 /// parameter drawing callbacks. The contents of this struct are entirely up to
 /// the user. For this example, we use it to keep track of the 'active' node.
-#[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
+#[derive(serde::Serialize, serde::Deserialize)]
 pub struct MyGraphState {
     pub active_node: Option<NodeId>,
     node_type_infos: HashMap<MyNodeType, NodeTypeInfo>,
@@ -264,6 +270,28 @@ impl Default for MyGraphState {
                     categories: vec!["Main".into()],
                     input_sockets: vec![
                         InputSocketType { name: "uv".into(), ty: MyDataType::Vec3, default: Err("vso.uv".to_string()) },
+                    ],
+                    output_sockets: vec![
+                        OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+                        OutputSocketType { name: "alpha".into(), ty: MyDataType::Scalar },
+                    ],
+                }),
+                (MyNodeType::MatCapTexure2D, NodeTypeInfo {
+                    label: "MatCapTexure2D".into(),
+                    categories: vec!["Main".into()],
+                    input_sockets: vec![
+                        InputSocketType { name: "uv".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+                    ],
+                    output_sockets: vec![
+                        OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+                        OutputSocketType { name: "alpha".into(), ty: MyDataType::Scalar },
+                    ],
+                }),
+                (MyNodeType::ToonTexure2D, NodeTypeInfo {
+                    label: "ToonTexure2D".into(),
+                    categories: vec!["Main".into()],
+                    input_sockets: vec![
+                        InputSocketType { name: "uv".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
                     ],
                     output_sockets: vec![
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
@@ -541,25 +569,7 @@ pub struct NodeGraphExample {
     user_state: MyGraphState,
     core_gen_code: String,
     path_buf: Option<PathBuf>,
-}
-
-#[cfg(feature = "persistence")]
-const PERSISTENCE_KEY: &str = "egui_node_graph";
-
-#[cfg(feature = "persistence")]
-impl NodeGraphExample {
-    /// If the persistence feature is enabled, Called once before the first frame.
-    /// Load previous app state (if any).
-    pub fn new(cc: &eframe::CreationContext<'_>) -> Self {
-        let state = cc
-            .storage
-            .and_then(|storage| eframe::get_value(storage, PERSISTENCE_KEY))
-            .unwrap_or_default();
-        Self {
-            state,
-            user_state: MyGraphState::default(),
-        }
-    }
+    shader_path_buf: Option<PathBuf>,
 }
 
 fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
@@ -707,19 +717,43 @@ impl NodeGraphExample {
             std::fs::write(p, fx).unwrap();
         }
     }
+    fn save_graph(&self) {
+        if let Some(p) = &self.shader_path_buf {
+            let contents = ron::ser::to_string(&self.state).unwrap();
+            std::fs::write(p, contents).unwrap();
+        }
+    }
 }
 impl eframe::App for NodeGraphExample {
-    #[cfg(feature = "persistence")]
-    /// If the persistence function is enabled,
-    /// Called by the frame work to save state before shutdown.
-    fn save(&mut self, storage: &mut dyn eframe::Storage) {
-        eframe::set_value(storage, PERSISTENCE_KEY, &self.state);
-    }
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             ui.horizontal(|ui| {
+                if ui.button("Load Graph").clicked() {
+                    let path_buf = rfd::FileDialog::new()
+                        .add_filter("Rusty Object Notation", &["ron"])
+                        .pick_file();
+                    if let Some(path) = &path_buf {
+                        let string = std::fs::read_to_string(&path).unwrap();
+                        self.state = ron::de::from_str(&string).unwrap();
+                    }
+                    self.save_graph();
+                }
+                if ui.button("Save Graph").clicked() {
+                    if self.shader_path_buf.is_none() {
+                        self.shader_path_buf = rfd::FileDialog::new()
+                            .add_filter("Rusty Object Notation", &["ron"])
+                            .save_file();
+                    }
+                    self.save_graph();
+                }
+                if ui.button("Save Graph As ...").clicked() {
+                    self.shader_path_buf = rfd::FileDialog::new()
+                        .add_filter("Rusty Object Notation", &["ron"])
+                        .save_file();
+                    self.save_graph();
+                }
                 if ui.button("Save Fx").clicked() {
                     if self.path_buf.is_none() {
                         self.path_buf = rfd::FileDialog::new()

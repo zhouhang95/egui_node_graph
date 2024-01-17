@@ -33,6 +33,39 @@ sampler mat_tex_sampler = sampler_state {
     MAGFILTER = LINEAR;
 };
 
+texture ObjectTexture : MATERIALTEXTURE;
+sampler ObjTexSampler = sampler_state
+{
+    texture = <ObjectTexture>;
+    MINFILTER = LINEAR;
+    MAGFILTER = LINEAR;
+    MIPFILTER = LINEAR;
+    ADDRESSU  = WRAP;
+    ADDRESSV  = WRAP;
+};
+
+texture ObjectSphereMap : MATERIALSPHEREMAP;
+sampler ObjSphSampler = sampler_state
+{
+    texture = <ObjectSphereMap>;
+    MINFILTER = LINEAR;
+    MAGFILTER = LINEAR;
+    MIPFILTER = LINEAR;
+    ADDRESSU  = WRAP;
+    ADDRESSV  = WRAP;
+};
+
+texture ObjectToonTexture : MATERIALTOONTEXTURE;
+sampler ObjToonSampler = sampler_state
+{
+    texture = <ObjectToonTexture>;
+    MINFILTER = LINEAR;
+    MAGFILTER = LINEAR;
+    MIPFILTER = NONE;
+    ADDRESSU  = CLAMP;
+    ADDRESSV  = CLAMP;
+};
+
 struct VS_OUTPUT {
     float4 pos: POSITION;
     float3 uv: TEXCOORD1;
@@ -108,7 +141,19 @@ float3 FMAVector(float a, float b, float c) {
 }
 
 float3 MainTexure2D(float3 uv, out float alpha) {
-    float4 texel = tex2D(mat_tex_sampler, uv.xy);
+    float4 texel = tex2D(ObjTexSampler, uv.xy);
+    alpha = texel.w;
+    return texel.xyz;
+}
+
+float3 MatCapTexure2D(float3 uv, out float alpha) {
+    float4 texel = tex2D(ObjSphSampler, uv.xy);
+    alpha = texel.w;
+    return texel.xyz;
+}
+
+float3 ToonTexure2D(float3 uv, out float alpha) {
+    float4 texel = tex2D(ObjToonSampler, uv.xy);
     alpha = texel.w;
     return texel.xyz;
 }
