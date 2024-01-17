@@ -3,6 +3,7 @@ use std::{borrow::Cow, collections::HashMap, fmt::format, ops::Index, path::Path
 
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph::*;
+use strum::{IntoEnumIterator, EnumIter};
 
 use crate::hlsl::*;
 
@@ -99,7 +100,7 @@ impl MyValueType {
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
 /// will display in the "new node" popup. The user code needs to tell the
 /// library how to convert a NodeTemplate into a Node.
-#[derive(Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(EnumIter, Clone, Copy, PartialEq, Eq, Hash)]
 #[cfg_attr(feature = "persistence", derive(serde::Serialize, serde::Deserialize))]
 pub enum MyNodeType {
     MakeScalar,
@@ -126,28 +127,7 @@ impl NodeTemplateIter for AllMyNodeTypes {
     type Item = MyNodeType;
 
     fn all_kinds(&self) -> Vec<Self::Item> {
-        // This function must return a list of node kinds, which the node finder
-        // will use to display it to the user. Crates like strum can reduce the
-        // boilerplate in enumerating all variants of an enum.
-        vec![
-            MyNodeType::MakeScalar,
-            MyNodeType::MakeVector,
-            MyNodeType::AddScalar,
-            MyNodeType::SubtractScalar,
-            MyNodeType::AddVector,
-            MyNodeType::SubtractVector,
-            MyNodeType::VectorTimesScalar,
-            MyNodeType::NormalDirection,
-            MyNodeType::LightDirection,
-            MyNodeType::DotProduct,
-            MyNodeType::Main,
-            MyNodeType::FloatToVector3,
-            MyNodeType::Clamp01Scalar,
-            MyNodeType::Clamp01Vector,
-            MyNodeType::FMAScalar,
-            MyNodeType::FMAVector,
-            MyNodeType::UV0,
-        ]
+        MyNodeType::iter().collect()
     }
 }
 
