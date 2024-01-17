@@ -107,6 +107,10 @@ float3 FMAVector(float a, float b, float c) {
     return mad(a, b, c);
 }
 
+float3 MainTexure2D(float3 uv) {
+    return tex2D(mat_tex_sampler, uv.xy).xyz;
+}
+
 
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
