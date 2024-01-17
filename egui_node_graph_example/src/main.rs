@@ -1,6 +1,7 @@
 #![forbid(unsafe_code)]
 #![cfg_attr(not(debug_assertions), deny(warnings))] // Forbid warnings in release builds
 #![warn(clippy::all, rust_2018_idioms)]
+#![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
 use mme_shader_graph::NodeGraphExample;
 

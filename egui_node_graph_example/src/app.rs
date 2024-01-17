@@ -805,6 +805,7 @@ impl eframe::App for NodeGraphExample {
                 _ => {},
             };
         }
+        #[cfg(debug_assertions)]
         ctx.debug_painter().text(
             egui::pos2(10.0, 35.0),
             egui::Align2::LEFT_TOP,
