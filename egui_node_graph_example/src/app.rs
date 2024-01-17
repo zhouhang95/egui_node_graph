@@ -114,8 +114,10 @@ pub enum MyNodeType {
     DotProduct,
     Main,
     FloatToVector3,
-    Saturate,
-    Saturate3,
+    Clamp01Scalar,
+    Clamp01Vector,
+    FMAScalar,
+    FMAVector,
 }
 
 pub struct AllMyNodeTypes;
@@ -139,8 +141,10 @@ impl NodeTemplateIter for AllMyNodeTypes {
             MyNodeType::DotProduct,
             MyNodeType::Main,
             MyNodeType::FloatToVector3,
-            MyNodeType::Saturate,
-            MyNodeType::Saturate3,
+            MyNodeType::Clamp01Scalar,
+            MyNodeType::Clamp01Vector,
+            MyNodeType::FMAScalar,
+            MyNodeType::FMAVector,
         ]
     }
 }
@@ -195,7 +199,7 @@ impl Default for MyGraphState {
                     label: "SubtractScalar".into(),
                     categories: vec!["Scalar".into()],
                     input_sockets: vec![
-                        InputSocketType { name: "v1".into(), ty: MyDataType::Scalar, default: None },
+                        InputSocketType { name: "v1".into(), ty: MyDataType::Scalar, default: Some(MyValueType::Scalar { value: 1.0 }) },
                         InputSocketType { name: "v2".into(), ty: MyDataType::Scalar, default: None },
                     ],
                     output_sockets: vec![
@@ -229,7 +233,7 @@ impl Default for MyGraphState {
                     label: "SubtractVector".into(),
                     categories: vec!["VectorOperations".into()],
                     input_sockets: vec![
-                        InputSocketType { name: "v1".into(), ty: MyDataType::Vec3, default: None },
+                        InputSocketType { name: "v1".into(), ty: MyDataType::Vec3, default: Some(MyValueType::Vec3 { value: [1.0; 3] }) },
                         InputSocketType { name: "v2".into(), ty: MyDataType::Vec3, default: None },
                     ],
                     output_sockets: vec![
@@ -279,7 +283,7 @@ impl Default for MyGraphState {
                     categories: vec!["Main".into()],
                     input_sockets: vec![
                         InputSocketType { name: "color".into(), ty: MyDataType::Vec3, default: None },
-                        InputSocketType { name: "alpha".into(), ty: MyDataType::Scalar, default: None },
+                        InputSocketType { name: "alpha".into(), ty: MyDataType::Scalar, default: Some(MyValueType::Scalar { value: 1.0 }) },
                     ],
                     output_sockets: Vec::new(),
                 }),
@@ -293,8 +297,8 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
                     ],
                 }),
-                (MyNodeType::Saturate, NodeTypeInfo {
-                    label: "Saturate".into(),
+                (MyNodeType::Clamp01Scalar, NodeTypeInfo {
+                    label: "Clamp01Scalar".into(),
                     categories: vec!["Arithmetic".into()],
                     input_sockets: vec![
                         InputSocketType { name: "value".into(), ty: MyDataType::Scalar, default: None },
@@ -303,11 +307,35 @@ impl Default for MyGraphState {
                         OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
                     ],
                 }),
-                (MyNodeType::Saturate3, NodeTypeInfo {
-                    label: "Saturate3".into(),
+                (MyNodeType::Clamp01Vector, NodeTypeInfo {
+                    label: "Clamp01Vector".into(),
                     categories: vec!["Arithmetic".into()],
                     input_sockets: vec![
                         InputSocketType { name: "value".into(), ty: MyDataType::Vec3, default: None },
+                    ],
+                    output_sockets: vec![
+                        OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+                    ],
+                }),
+                (MyNodeType::FMAScalar, NodeTypeInfo {
+                    label: "FMAScalar".into(),
+                    categories: vec!["Arithmetic".into()],
+                    input_sockets: vec![
+                        InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: None },
+                        InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Some(MyValueType::Scalar { value: 0.5 }) },
+                        InputSocketType { name: "c".into(), ty: MyDataType::Scalar, default: Some(MyValueType::Scalar { value: 0.5 }) },
+                    ],
+                    output_sockets: vec![
+                        OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+                    ],
+                }),
+                (MyNodeType::FMAVector, NodeTypeInfo {
+                    label: "FMAVector".into(),
+                    categories: vec!["Arithmetic".into()],
+                    input_sockets: vec![
+                        InputSocketType { name: "a".into(), ty: MyDataType::Vec3, default: None },
+                        InputSocketType { name: "b".into(), ty: MyDataType::Vec3, default: Some(MyValueType::Vec3 { value: [0.5; 3] }) },
+                        InputSocketType { name: "c".into(), ty: MyDataType::Vec3, default: Some(MyValueType::Vec3 { value: [0.5; 3] }) },
                     ],
                     output_sockets: vec![
                         OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }

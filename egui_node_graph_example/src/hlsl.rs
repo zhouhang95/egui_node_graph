@@ -55,6 +55,54 @@ float DotProduct(float3 a, float3 b) {
     return dot(a, b);
 }
 
+float MakeScalar(float v) {
+    return v;
+}
+
+float AddScalar(float a, float b) {
+    return a + b;
+}
+
+float SubtractScalar(float a, float b) {
+    return a - b;
+}
+
+float3 AddVector(float3 a, float3 b) {
+    return a + b;
+}
+
+float3 SubtractVector(float3 a, float3 b) {
+    return a - b;
+}
+
+float3 VectorTimesScalar(float3 v, float s) {
+    return v * s;
+}
+
+float4 Main(float3 color, float alpha) {
+    return float4(color, alpha);
+}
+
+float3 FloatToVector3(float v) {
+    return float3(v, v, v);
+}
+
+float Clamp01Scalar(float v) {
+    return saturate(v);
+}
+
+float3 Clamp01Vector(float3 v) {
+    return saturate(v);
+}
+
+float FMAScalar(float a, float b, float c) {
+    return mad(a, b, c);
+}
+
+float3 FMAVector(float a, float b, float c) {
+    return mad(a, b, c);
+}
+
 
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
