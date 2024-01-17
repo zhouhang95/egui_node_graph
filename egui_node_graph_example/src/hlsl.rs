@@ -107,8 +107,10 @@ float3 FMAVector(float a, float b, float c) {
     return mad(a, b, c);
 }
 
-float3 MainTexure2D(float3 uv) {
-    return tex2D(mat_tex_sampler, uv.xy).xyz;
+float3 MainTexure2D(float3 uv, out float alpha) {
+    float4 texel = tex2D(mat_tex_sampler, uv.xy);
+    alpha = texel.w;
+    return texel.xyz;
 }
 
 

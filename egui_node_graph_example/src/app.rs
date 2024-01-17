@@ -266,7 +266,8 @@ impl Default for MyGraphState {
                         InputSocketType { name: "uv".into(), ty: MyDataType::Vec3, default: Err("vso.uv".to_string()) },
                     ],
                     output_sockets: vec![
-                        OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+                        OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+                        OutputSocketType { name: "alpha".into(), ty: MyDataType::Scalar },
                     ],
                 }),
                 (MyNodeType::LightDirection, NodeTypeInfo {
@@ -591,7 +592,6 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeTy
         let cg_node_name = &cg_node_names[i];
         let my_node_type = graph[*nid].user_data.template;
         let input_sockets = &node_type_infos[&my_node_type].input_sockets;
-        let output_sockets = &node_type_infos[&my_node_type].output_sockets;
         let mut params = String::new();
         let mut is_first = true;
         for (j, input_id) in graph[*nid].input_ids().enumerate() {
@@ -600,8 +600,15 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeTy
             }
             if let Some(other_output_id) = graph.connection(input_id) {
                 let next_nid = graph[other_output_id].node;
+                let mut output_index = usize::MAX;
+                for (k, (_, oid)) in graph[next_nid].outputs.iter().enumerate() {
+                    if other_output_id == *oid {
+                        output_index = k;
+                    }
+                }
+
                 let index = indexs[&next_nid];
-                params += &format!("{}_o0", cg_node_names[index]);
+                params += &format!("{}_o{}", cg_node_names[index], output_index);
             } else {
                 match &input_sockets[j].default {
                     Ok(_) => {
@@ -629,7 +636,30 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeTy
         else if my_node_type == MyNodeType::UV0 {
             params += "vso.uv";
         }
+        let output_sockets = &node_type_infos[&my_node_type].output_sockets;
         if output_sockets.len() > 0 {
+            for k in 1..output_sockets.len() {
+                if !is_first {
+                    params += ", ";
+                }
+                params += &format!(
+                    "{}_o{}",
+                    cg_node_name,
+                    k,
+                );
+
+                let output_type = output_sockets[k].ty;
+                text += &format!(
+                    "{} {}_o{};\n",
+                    match output_type {
+                        MyDataType::Scalar => "float ",
+                        MyDataType::Vec3 => "float3",
+                    },
+                    cg_node_name,
+                    k,
+                );
+                is_first = false;
+            }
             let output_type = output_sockets[0].ty;
             let main_cmd = format!(
                 "{} {}_o0 = {}({});",
