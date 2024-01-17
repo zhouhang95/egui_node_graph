@@ -118,6 +118,7 @@ pub enum MyNodeType {
     Clamp01Vector,
     FMAScalar,
     FMAVector,
+    UV0,
 }
 
 pub struct AllMyNodeTypes;
@@ -145,6 +146,7 @@ impl NodeTemplateIter for AllMyNodeTypes {
             MyNodeType::Clamp01Vector,
             MyNodeType::FMAScalar,
             MyNodeType::FMAVector,
+            MyNodeType::UV0,
         ]
     }
 }
@@ -253,6 +255,14 @@ impl Default for MyGraphState {
                 }),
                 (MyNodeType::NormalDirection, NodeTypeInfo {
                     label: "NormalDirection".into(),
+                    categories: vec!["GeometryData".into()],
+                    input_sockets: Vec::new(),
+                    output_sockets: vec![
+                        OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+                    ],
+                }),
+                (MyNodeType::UV0, NodeTypeInfo {
+                    label: "UV0".into(),
                     categories: vec!["GeometryData".into()],
                     input_sockets: Vec::new(),
                     output_sockets: vec![
@@ -606,6 +616,9 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeTy
         // ad hoc
         if my_node_type == MyNodeType::NormalDirection {
             params += "vso.nrm";
+        }
+        else if my_node_type == MyNodeType::UV0 {
+            params += "vso.uv";
         }
         if output_sockets.len() > 0 {
             let output_type = output_sockets[0].ty;

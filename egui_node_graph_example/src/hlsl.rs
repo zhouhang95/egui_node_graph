@@ -47,6 +47,10 @@ float3 NormalDirection(float3 v) {
     return v;
 }
 
+float3 UV0(float3 v) {
+    return v;
+}
+
 float3 LightDirection() {
     return -light_dir;
 }
