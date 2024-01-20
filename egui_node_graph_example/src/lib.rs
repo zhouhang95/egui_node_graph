@@ -4,6 +4,7 @@
 
 mod hlsl;
 mod app;
+mod types;
 pub use app::NodeGraphExample;
 
 // ----------------------------------------------------------------------------

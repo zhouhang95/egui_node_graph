@@ -1,4 +1,4 @@
-pub const HLSL_0: &'static str = r#"
+pub const HLSL_0: &str = r#"
 float4x4 worldMatrix : WORLD ;
 float4x4 worldViewMatrix : WORLDVIEW ;
 float4x4 worldViewProjMatrix : WORLDVIEWPROJECTION ;
@@ -169,7 +169,7 @@ VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCO
 
 float4 Basic_PS(VS_OUTPUT vso): COLOR0 {
 "#;
-pub const HLSL_1: &'static str = r#"
+pub const HLSL_1: &str = r#"
 }
 
 technique MainTec <string MMDPass = "object";> {
