@@ -1,6 +1,7 @@
 use std::collections::HashMap;
 
 use egui_node_graph::NodeTemplateIter;
+use once_cell::sync::Lazy;
 use strum::{EnumIter, IntoEnumIterator};
 
 
@@ -125,7 +126,7 @@ impl NodeTemplateIter for AllMyNodeTypes {
     }
 }
 
-pub fn get_node_type_infos() -> HashMap<MyNodeType, NodeTypeInfo> {
+pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
     HashMap::from([
         (MyNodeType::MakeScalar, NodeTypeInfo {
             label: "MakeScalar".into(),
@@ -347,4 +348,4 @@ pub fn get_node_type_infos() -> HashMap<MyNodeType, NodeTypeInfo> {
             ],
         }),
     ])
-}
+});

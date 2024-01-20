@@ -22,21 +22,10 @@ pub enum MyResponse {
 /// The graph 'global' state. This state struct is passed around to the node and
 /// parameter drawing callbacks. The contents of this struct are entirely up to
 /// the user. For this example, we use it to keep track of the 'active' node.
-#[derive(serde::Serialize, serde::Deserialize)]
+#[derive(serde::Serialize, serde::Deserialize, Default)]
 pub struct MyGraphState {
     pub active_node: Option<NodeId>,
-    node_type_infos: HashMap<MyNodeType, NodeTypeInfo>,
     node_custom_data: HashMap<NodeId, String>,
-}
-
-impl Default for MyGraphState {
-    fn default() -> Self {
-        Self {
-            node_custom_data: HashMap::new(),
-            active_node: None,
-            node_type_infos: get_node_type_infos(),
-        }
-    }
 }
 
 // =========== Then, you need to implement some traits ============
@@ -67,13 +56,13 @@ impl NodeTemplateTrait for MyNodeType {
     type UserState = MyGraphState;
     type CategoryType = String;
 
-    fn node_finder_label(&self, user_state: &mut Self::UserState) -> Cow<'_, str> {
-        user_state.node_type_infos[self].label.clone().into()
+    fn node_finder_label(&self, _user_state: &mut Self::UserState) -> Cow<'_, str> {
+        NODE_TYPE_INFOS[self].label.clone().into()
     }
 
     // this is what allows the library to show collapsible lists in the node finder.
-    fn node_finder_categories(&self, user_state: &mut Self::UserState) -> Vec<String> {
-        user_state.node_type_infos[self].categories.clone()
+    fn node_finder_categories(&self, _user_state: &mut Self::UserState) -> Vec<String> {
+        NODE_TYPE_INFOS[self].categories.clone()
     }
 
     fn node_graph_label(&self, user_state: &mut Self::UserState) -> String {
@@ -89,10 +78,10 @@ impl NodeTemplateTrait for MyNodeType {
     fn build_node(
         &self,
         graph: &mut Graph<Self::NodeData, Self::DataType, Self::ValueType>,
-        user_state: &mut Self::UserState,
+        _user_state: &mut Self::UserState,
         node_id: NodeId,
     ) {
-        for input_socket in &user_state.node_type_infos[self].input_sockets {
+        for input_socket in &NODE_TYPE_INFOS[self].input_sockets {
             graph.add_input_param(
                 node_id,
                 input_socket.name.to_string(),
@@ -102,7 +91,7 @@ impl NodeTemplateTrait for MyNodeType {
                 true,
             );
         }
-        for output_socket in &user_state.node_type_infos[self].output_sockets {
+        for output_socket in &NODE_TYPE_INFOS[self].output_sockets {
             graph.add_output_param(
                 node_id,
                 output_socket.name.to_string(),
@@ -245,7 +234,7 @@ fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeI
     collect.push(node_id);
 }
 
-fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeType, NodeTypeInfo>) -> String {
+fn code_gen(graph: &MyGraph, node_id: NodeId) -> String {
     let mut topological_order = Vec::new();
     postorder_traversal(graph, node_id, &mut topological_order);
     let mut indexs = HashMap::new();
@@ -261,7 +250,7 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeTy
         let label = &graph[*nid].label;
         let cg_node_name = &cg_node_names[i];
         let my_node_type = graph[*nid].user_data.template;
-        let input_sockets = &node_type_infos[&my_node_type].input_sockets;
+        let input_sockets = &NODE_TYPE_INFOS[&my_node_type].input_sockets;
         let mut params = String::new();
         let mut is_first = true;
         for (j, input_id) in graph[*nid].input_ids().enumerate() {
@@ -306,7 +295,7 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_type_infos: &HashMap<MyNodeTy
         else if my_node_type == MyNodeType::UV0 {
             params += "vso.uv";
         }
-        let output_sockets = &node_type_infos[&my_node_type].output_sockets;
+        let output_sockets = &NODE_TYPE_INFOS[&my_node_type].output_sockets;
         if output_sockets.len() > 0 {
             for k in 1..output_sockets.len() {
                 if !is_first {
@@ -456,7 +445,7 @@ impl eframe::App for NodeGraphExample {
                         MyResponse::ValueChanged => {},
                     };
                     if let Some(node_id) = self.user_state.active_node {
-                        self.core_gen_code = code_gen(&self.state.graph, node_id, &self.user_state.node_type_infos);
+                        self.core_gen_code = code_gen(&self.state.graph, node_id);
                         self.save_fx_file();
                     } else {
                         self.core_gen_code = String::new();
