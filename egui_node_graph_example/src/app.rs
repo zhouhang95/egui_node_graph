@@ -136,6 +136,7 @@ pub enum MyNodeType {
     MainTexure2D,
     MatCapTexure2D,
     ToonTexure2D,
+    CustomTexture2D,
 }
 
 pub struct AllMyNodeTypes;
@@ -165,11 +166,13 @@ pub enum MyResponse {
 pub struct MyGraphState {
     pub active_node: Option<NodeId>,
     node_type_infos: HashMap<MyNodeType, NodeTypeInfo>,
+    node_custom_data: HashMap<NodeId, String>,
 }
 
 impl Default for MyGraphState {
     fn default() -> Self {
         Self {
+            node_custom_data: HashMap::new(),
             active_node: None,
             node_type_infos: HashMap::from([
                 (MyNodeType::MakeScalar, NodeTypeInfo {
@@ -289,6 +292,17 @@ impl Default for MyGraphState {
                 }),
                 (MyNodeType::ToonTexure2D, NodeTypeInfo {
                     label: "ToonTexure2D".into(),
+                    categories: vec!["Main".into()],
+                    input_sockets: vec![
+                        InputSocketType { name: "uv".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+                    ],
+                    output_sockets: vec![
+                        OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+                        OutputSocketType { name: "alpha".into(), ty: MyDataType::Scalar },
+                    ],
+                }),
+                (MyNodeType::CustomTexture2D, NodeTypeInfo {
+                    label: "CustomTexture2D".into(),
                     categories: vec!["Main".into()],
                     input_sockets: vec![
                         InputSocketType { name: "uv".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
@@ -518,7 +532,7 @@ impl NodeDataTrait for MyNodeData {
         &self,
         ui: &mut egui::Ui,
         node_id: NodeId,
-        _graph: &Graph<MyNodeData, MyDataType, MyValueType>,
+        graph: &Graph<MyNodeData, MyDataType, MyValueType>,
         user_state: &mut Self::UserState,
     ) -> Vec<NodeResponse<MyResponse, MyNodeData>>
     where
@@ -530,6 +544,15 @@ impl NodeDataTrait for MyNodeData {
         // UIs based on that.
 
         let mut responses = vec![];
+        let node_type = graph[node_id].user_data.template;
+        let node_custom_data = &mut user_state.node_custom_data;
+        if node_type == MyNodeType::CustomTexture2D {
+            if !node_custom_data.contains_key(&node_id) {
+                node_custom_data.insert(node_id, String::new());
+            }
+
+            ui.text_edit_multiline(node_custom_data.get_mut(&node_id).unwrap());
+        }
         let is_active = user_state
             .active_node
             .map(|id| id == node_id)
