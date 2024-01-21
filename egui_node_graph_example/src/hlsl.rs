@@ -65,7 +65,8 @@ sampler ObjToonSampler = sampler_state
     ADDRESSU  = CLAMP;
     ADDRESSV  = CLAMP;
 };
-
+"#;
+pub const HLSL_1: &str = r#"
 struct VS_OUTPUT {
     float4 pos: POSITION;
     float3 uv: TEXCOORD1;
@@ -158,6 +159,11 @@ float3 ToonTexure2D(float3 uv, out float alpha) {
     return texel.xyz;
 }
 
+float3 CustomTexture2D(float3 uv, sampler s, out float alpha) {
+    float4 texel = tex2D(s, uv.xy);
+    alpha = texel.w;
+    return texel.xyz;
+}
 
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
@@ -169,7 +175,7 @@ VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCO
 
 float4 Basic_PS(VS_OUTPUT vso): COLOR0 {
 "#;
-pub const HLSL_1: &str = r#"
+pub const HLSL_2: &str = r#"
 }
 
 technique MainTec <string MMDPass = "object";> {

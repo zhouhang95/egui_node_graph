@@ -176,8 +176,13 @@ impl NodeDataTrait for MyNodeData {
         let node_type = graph[node_id].user_data.template;
         let node_custom_data = &mut user_state.node_custom_data;
         if node_type == MyNodeType::CustomTexture2D {
+            if ui.button("Open file").clicked() {
+                if let Some(f) = rfd::FileDialog::new().pick_file() {
+                    node_custom_data.insert(node_id, f.to_string_lossy().to_string());
+                }
+            }
             node_custom_data.entry(node_id).or_default();
-            ui.text_edit_multiline(node_custom_data.get_mut(&node_id).unwrap());
+            ui.label(&node_custom_data[&node_id]);
         }
         let is_active = user_state
             .active_node
@@ -216,7 +221,7 @@ pub struct NodeGraphExample {
     state: MyEditorState,
 
     user_state: MyGraphState,
-    core_gen_code: String,
+    core_gen_code: Option<GenCode>,
     path_buf: Option<PathBuf>,
     shader_path_buf: Option<PathBuf>,
 }
@@ -234,7 +239,7 @@ fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeI
     collect.push(node_id);
 }
 
-fn code_gen(graph: &MyGraph, node_id: NodeId) -> String {
+fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>) -> GenCode {
     let mut topological_order = Vec::new();
     postorder_traversal(graph, node_id, &mut topological_order);
     let mut indexs = HashMap::new();
@@ -245,7 +250,8 @@ fn code_gen(graph: &MyGraph, node_id: NodeId) -> String {
         let cg_node_name = format!("_{}_{}", i, label);
         cg_node_names.push(cg_node_name.clone());
     }
-    let mut text = String::new();
+    let mut ps_code = String::new();
+    let mut sampler_code = String::new();
     for (i, nid) in topological_order.iter().enumerate() {
         let label = &graph[*nid].label;
         let cg_node_name = &cg_node_names[i];
@@ -295,6 +301,18 @@ fn code_gen(graph: &MyGraph, node_id: NodeId) -> String {
         else if my_node_type == MyNodeType::UV0 {
             params += "vso.uv";
         }
+        else if my_node_type == MyNodeType::CustomTexture2D {
+            params += &format!(", _{}_sampler", i);
+            let template = r#"
+                texture _{0}_tex < string ResourceName = "{1}"; >;
+                sampler _{0}_sampler = sampler_state {
+                    texture = <_{0}_tex>;
+                };
+                "#.to_owned();
+            let template = template.replace("{0}", &i.to_string());
+            let template = template.replace("{1}", &node_custom_data[nid].replace('\\', "\\\\"));
+            sampler_code +=& &template;
+        }
         let output_sockets = &NODE_TYPE_INFOS[&my_node_type].output_sockets;
         if output_sockets.len() > 0 {
             for k in 1..output_sockets.len() {
@@ -308,7 +326,7 @@ fn code_gen(graph: &MyGraph, node_id: NodeId) -> String {
                 );
 
                 let output_type = output_sockets[k].ty;
-                text += &format!(
+                ps_code += &format!(
                     "{} {}_o{};\n",
                     match output_type {
                         MyDataType::Scalar => "float ",
@@ -330,14 +348,14 @@ fn code_gen(graph: &MyGraph, node_id: NodeId) -> String {
                 label,
                 &params,
             );
-            text += &format!("{}\n", main_cmd);
+            ps_code += &format!("{}\n", main_cmd);
             if i == topological_order.len() - 1 {
                 match output_type {
                     MyDataType::Scalar => {
-                        text += &format!("return float4({}_o0, {}_o0, {}_o0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
+                        ps_code += &format!("return float4({}_o0, {}_o0, {}_o0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
                     },
                     MyDataType::Vec3 => {
-                        text += &format!("return float4({}_o0, 1.0);\n", cg_node_name);
+                        ps_code += &format!("return float4({}_o0, 1.0);\n", cg_node_name);
                     },
                 }
             }
@@ -347,23 +365,30 @@ fn code_gen(graph: &MyGraph, node_id: NodeId) -> String {
                 label,
                 &params,
             );
-            text += &format!("{}\n", main_cmd);
+            ps_code += &format!("{}\n", main_cmd);
         }
     }
-    text
+    GenCode {
+        ps_code,
+        sampler_code,
+    }
 }
 
 impl NodeGraphExample {
     fn save_fx_file(&self) {
-        if self.core_gen_code.is_empty() {
-            return;
-        }
-        if let Some(p) = &self.path_buf {
-            let mut fx = String::new();
-            fx += HLSL_0;
-            fx += &self.core_gen_code;
-            fx += HLSL_1;
-            std::fs::write(p, fx).unwrap();
+        match &self.core_gen_code {
+            Some(gen_code) => {
+                if let Some(p) = &self.path_buf {
+                    let mut fx = String::new();
+                    fx += HLSL_0;
+                    fx += &gen_code.sampler_code;
+                    fx += HLSL_1;
+                    fx += &gen_code.ps_code;
+                    fx += HLSL_2;
+                    std::fs::write(p, fx).unwrap();
+                }
+            },
+            None => {},
         }
     }
     fn save_graph(&self) {
@@ -445,23 +470,32 @@ impl eframe::App for NodeGraphExample {
                         MyResponse::ValueChanged => {},
                     };
                     if let Some(node_id) = self.user_state.active_node {
-                        self.core_gen_code = code_gen(&self.state.graph, node_id);
+                        self.core_gen_code = Some(code_gen(&self.state.graph, node_id, &self.user_state.node_custom_data));
                         self.save_fx_file();
                     } else {
-                        self.core_gen_code = String::new();
+                        self.core_gen_code = None;
                     }
                 },
                 _ => {},
             };
         }
         #[cfg(debug_assertions)]
-        ctx.debug_painter().text(
-            egui::pos2(10.0, 35.0),
-            egui::Align2::LEFT_TOP,
-            self.core_gen_code.clone(),
-            TextStyle::Button.resolve(&ctx.style()),
-            egui::Color32::WHITE,
-        );
+        if let Some(gen_code) = &self.core_gen_code {
+            ctx.debug_painter().text(
+                egui::pos2(10.0, 35.0),
+                egui::Align2::LEFT_TOP,
+                &gen_code.ps_code,
+                TextStyle::Button.resolve(&ctx.style()),
+                egui::Color32::WHITE,
+            );
+            ctx.debug_painter().text(
+                egui::pos2(10.0, 200.0),
+                egui::Align2::LEFT_TOP,
+                &gen_code.sampler_code,
+                TextStyle::Button.resolve(&ctx.style()),
+                egui::Color32::WHITE,
+            );
+        }
     }
 }
 

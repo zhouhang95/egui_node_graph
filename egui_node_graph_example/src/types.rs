@@ -4,6 +4,11 @@ use egui_node_graph::NodeTemplateIter;
 use once_cell::sync::Lazy;
 use strum::{EnumIter, IntoEnumIterator};
 
+#[derive(Debug, Clone, Default)]
+pub struct GenCode {
+    pub ps_code: String,
+    pub sampler_code: String,
+}
 
 // ========= First, define your user data types =============
 
