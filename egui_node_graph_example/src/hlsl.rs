@@ -71,6 +71,7 @@ struct VS_OUTPUT {
     float4 pos: POSITION;
     float3 uv: TEXCOORD1;
     float3 nrm: TEXCOORD2;
+    float2 screenPos: TEXCOORD3;
 };
 
 float3 MakeVector(float x, float y, float z) {
@@ -141,6 +142,14 @@ float3 FMAVector(float a, float b, float c) {
     return mad(a, b, c);
 }
 
+float Step(float edge, float x) {
+    return step(edge, x);
+}
+
+float3 ScreenPos(float2 screenPos) {
+    return float3(screenPos, 0);
+}
+
 float3 MainTexure2D(float3 uv, out float alpha) {
     float4 texel = tex2D(ObjTexSampler, uv.xy);
     alpha = texel.w;
@@ -168,6 +177,7 @@ float3 CustomTexture2D(float3 uv, sampler s, out float alpha) {
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
     vso.pos = mul(pos, worldViewProjMatrix);
+    vso.screenPos = mad(vso.pos.xy/ vso.pos.w, 0.5, 0.5);
     vso.nrm = normalize(mul(normal, (float3x3)worldMatrix));
     vso.uv = float3(uv, 0);
     return vso;

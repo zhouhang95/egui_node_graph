@@ -120,6 +120,8 @@ pub enum MyNodeType {
     MatCapTexure2D,
     ToonTexure2D,
     CustomTexture2D,
+    Step,
+    ScreenPos
 }
 
 pub struct AllMyNodeTypes;
@@ -348,6 +350,25 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 InputSocketType { name: "b".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::Vec3 { value: [0.5; 3] }) },
                 InputSocketType { name: "c".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::Vec3 { value: [0.5; 3] }) },
             ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::Step, NodeTypeInfo {
+            label: "Step".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: vec![
+                InputSocketType { name: "edge".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+                InputSocketType { name: "x".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::ScreenPos, NodeTypeInfo {
+            label: "ScreenPos".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: Vec::new(),
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
