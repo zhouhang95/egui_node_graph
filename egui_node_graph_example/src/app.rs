@@ -50,7 +50,7 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
 // A trait for the node kinds, which tells the library how to build new nodes
 // from the templates in the node finder
 impl NodeTemplateTrait for MyNodeType {
-    type NodeData = MyNodeData;
+    type NodeData = MyNodeType;
     type DataType = MyDataType;
     type ValueType = MyValueType;
     type UserState = MyGraphState;
@@ -72,7 +72,7 @@ impl NodeTemplateTrait for MyNodeType {
     }
 
     fn user_data(&self, _user_state: &mut Self::UserState) -> Self::NodeData {
-        MyNodeData { template: *self }
+        *self
     }
 
     fn build_node(
@@ -104,14 +104,14 @@ impl NodeTemplateTrait for MyNodeType {
 impl WidgetValueTrait for MyValueType {
     type Response = MyResponse;
     type UserState = MyGraphState;
-    type NodeData = MyNodeData;
+    type NodeData = MyNodeType;
     fn value_widget(
         &mut self,
         param_name: &str,
         _node_id: NodeId,
         ui: &mut egui::Ui,
         _user_state: &mut MyGraphState,
-        _node_data: &MyNodeData,
+        _node_data: &MyNodeType,
     ) -> Vec<MyResponse> {
         // This trait is used to tell the library which UI to display for the
         // inline parameter widgets.
@@ -146,7 +146,7 @@ impl WidgetValueTrait for MyValueType {
 }
 
 impl UserResponseTrait for MyResponse {}
-impl NodeDataTrait for MyNodeData {
+impl NodeDataTrait for MyNodeType {
     type Response = MyResponse;
     type UserState = MyGraphState;
     type DataType = MyDataType;
@@ -161,9 +161,9 @@ impl NodeDataTrait for MyNodeData {
         &self,
         ui: &mut egui::Ui,
         node_id: NodeId,
-        graph: &Graph<MyNodeData, MyDataType, MyValueType>,
+        graph: &Graph<MyNodeType, MyDataType, MyValueType>,
         user_state: &mut Self::UserState,
-    ) -> Vec<NodeResponse<MyResponse, MyNodeData>>
+    ) -> Vec<NodeResponse<MyResponse, MyNodeType>>
     where
         MyResponse: UserResponseTrait,
     {
@@ -173,7 +173,7 @@ impl NodeDataTrait for MyNodeData {
         // UIs based on that.
 
         let mut responses = vec![];
-        let node_type = graph[node_id].user_data.template;
+        let node_type = graph[node_id].user_data;
         let node_custom_data = &mut user_state.node_custom_data;
         if node_type == MyNodeType::CustomTexture2D {
             if ui.button("Open file").clicked() {
@@ -210,19 +210,21 @@ impl NodeDataTrait for MyNodeData {
     }
 }
 
-type MyGraph = Graph<MyNodeData, MyDataType, MyValueType>;
-type MyEditorState =
-    GraphEditorState<MyNodeData, MyDataType, MyValueType, MyNodeType, MyGraphState>;
+type MyGraph = Graph<MyNodeType, MyDataType, MyValueType>;
+type MyEditorState = GraphEditorState<MyNodeType, MyDataType, MyValueType, MyNodeType, MyGraphState>;
 
-#[derive(Default)]
+#[derive(Default, serde::Serialize, serde::Deserialize)]
 pub struct NodeGraphExample {
     // The `GraphEditorState` is the top-level object. You "register" all your
     // custom types by specifying it as its generic parameters.
     state: MyEditorState,
 
     user_state: MyGraphState,
+    #[serde(skip)]
     core_gen_code: Option<GenCode>,
+    #[serde(skip)]
     path_buf: Option<PathBuf>,
+    #[serde(skip)]
     shader_path_buf: Option<PathBuf>,
 }
 
@@ -255,7 +257,7 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
     for (i, nid) in topological_order.iter().enumerate() {
         let label = &graph[*nid].label;
         let cg_node_name = &cg_node_names[i];
-        let my_node_type = graph[*nid].user_data.template;
+        let my_node_type = graph[*nid].user_data;
         let input_sockets = &NODE_TYPE_INFOS[&my_node_type].input_sockets;
         let mut params = String::new();
         let mut is_first = true;
@@ -393,7 +395,7 @@ impl NodeGraphExample {
     }
     fn save_graph(&self) {
         if let Some(p) = &self.shader_path_buf {
-            let contents = ron::ser::to_string(&self.state).unwrap();
+            let contents = ron::ser::to_string(self).unwrap();
             std::fs::write(p, contents).unwrap();
         }
     }
@@ -410,7 +412,7 @@ impl eframe::App for NodeGraphExample {
                         .pick_file();
                     if let Some(path) = &path_buf {
                         let string = std::fs::read_to_string(path).unwrap();
-                        self.state = ron::de::from_str(&string).unwrap();
+                        *self = ron::de::from_str(&string).unwrap();
                     }
                     self.save_graph();
                 }
