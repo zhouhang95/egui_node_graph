@@ -121,7 +121,12 @@ pub enum MyNodeType {
     ToonTexure2D,
     CustomTexture2D,
     Step,
-    ScreenPos
+    ScreenPos,
+    WorldPos,
+    CameraPos,
+    Depth,
+    Fresenl,
+    ViewDirection,
 }
 
 pub struct AllMyNodeTypes;
@@ -367,6 +372,48 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
         }),
         (MyNodeType::ScreenPos, NodeTypeInfo {
             label: "ScreenPos".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::WorldPos, NodeTypeInfo {
+            label: "WorldPos".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::CameraPos, NodeTypeInfo {
+            label: "CameraPos".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::Depth, NodeTypeInfo {
+            label: "Depth".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::Fresenl, NodeTypeInfo {
+            label: "Fresenl".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: vec![
+                InputSocketType { name: "exp".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 }) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::ViewDirection, NodeTypeInfo {
+            label: "ViewDirection".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![

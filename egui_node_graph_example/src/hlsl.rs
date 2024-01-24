@@ -1,5 +1,7 @@
 pub const HLSL_0: &str = r#"
 float4x4 worldMatrix : WORLD ;
+float4x4 viewMatrix : VIEW ;
+float4x4 viewProjMatrix : VIEWPROJECTION ;
 float4x4 worldViewMatrix : WORLDVIEW ;
 float4x4 worldViewProjMatrix : WORLDVIEWPROJECTION ;
 float4x4 lightViewMatrix : VIEW < string Object = "Light"; > ;
@@ -17,6 +19,7 @@ float3 lightAmbient     : AMBIENT   < string Object = "Light"; >;
 float3 lightSpecular    : SPECULAR  < string Object = "Light"; >;
 float4 groundShadowColor : GROUNDSHADOWCOLOR;
 
+static float3 cam_dir = mul(float3(0, 0, 1), transpose((float3x3)viewMatrix));
 
 float3 light_dir: DIRECTION<string Object = "Light";>;
 float3 cam_pos: POSITION<string Object = "Camera";>;
@@ -25,6 +28,7 @@ float2 screenSize : VIEWPORTPIXELSIZE;
 
 float ftime : TIME <bool SyncInEditMode=true;>;
 float elapsed_time : ELAPSEDTIME;
+static float fps = 1.0 / elapsed_time;
 
 texture mat_tex: MATERIALTEXTURE;
 sampler mat_tex_sampler = sampler_state {
@@ -72,6 +76,7 @@ struct VS_OUTPUT {
     float3 uv: TEXCOORD1;
     float3 nrm: TEXCOORD2;
     float2 screenPos: TEXCOORD3;
+    float3 posWS: TEXCOORD5;
 };
 
 float3 MakeVector(float x, float y, float z) {
@@ -150,6 +155,27 @@ float3 ScreenPos(float2 screenPos) {
     return float3(screenPos, 0);
 }
 
+float3 WorldPos(float3 pos) {
+    return pos;
+}
+
+float3 ViewDirection(float3 posWS) {
+    return normalize(cam_pos - posWS);
+}
+
+float3 Fresenl(float exp, float3 posWS, float3 nrmWS) {
+    float base = 1 - saturate(dot(normalize(cam_pos - posWS), nrmWS));
+    return pow(base, exp);
+}
+
+float3 CameraPos() {
+    return cam_pos;
+}
+
+float Depth(float3 posWS) {
+    return dot((posWS - cam_pos), cam_dir);
+}
+
 float3 MainTexure2D(float3 uv, out float alpha) {
     float4 texel = tex2D(ObjTexSampler, uv.xy);
     alpha = texel.w;
@@ -177,6 +203,7 @@ float3 CustomTexture2D(float3 uv, sampler s, out float alpha) {
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
     vso.pos = mul(pos, worldViewProjMatrix);
+    vso.posWS = mul(pos, worldMatrix).xyz;
     vso.screenPos = mad(vso.pos.xy/ vso.pos.w, 0.5, 0.5);
     vso.nrm = normalize(mul(normal, (float3x3)worldMatrix));
     vso.uv = float3(uv, 0);

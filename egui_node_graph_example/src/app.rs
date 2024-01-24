@@ -306,6 +306,18 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
         else if my_node_type == MyNodeType::ScreenPos {
             params += "vso.screenPos";
         }
+        else if my_node_type == MyNodeType::WorldPos {
+            params += "vso.posWS"
+        }
+        else if my_node_type == MyNodeType::ViewDirection {
+            params += "vso.posWS"
+        }
+        else if my_node_type == MyNodeType::Fresenl {
+            params += ", vso.posWS, vso.nrm"
+        }
+        else if my_node_type == MyNodeType::Depth {
+            params += "vso.posWS"
+        }
         else if my_node_type == MyNodeType::CustomTexture2D {
             params += &format!(", _{}_sampler", i);
             let template = r#"
