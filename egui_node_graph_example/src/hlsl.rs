@@ -232,6 +232,10 @@ float3 CustomTexture2D(float3 uv, sampler s, out float alpha) {
     return texel.xyz;
 }
 
+float MatAlpha() {
+    return materialDiffuse.w;
+}
+
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
     vso.pos = mul(pos, worldViewProjMatrix);
