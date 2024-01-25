@@ -224,7 +224,7 @@ pub struct NodeGraphExample {
     core_gen_code: Option<GenCode>,
     #[serde(skip)]
     path_buf: Option<PathBuf>,
-    #[serde(skip)]
+
     shader_path_buf: Option<PathBuf>,
 }
 
