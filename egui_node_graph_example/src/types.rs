@@ -134,6 +134,7 @@ pub enum MyNodeType {
     Div,
     Lerp,
     Lerp3,
+    Normalize,
 }
 
 pub struct AllMyNodeTypes;
@@ -441,6 +442,16 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             label: "Depth".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::Normalize, NodeTypeInfo {
+            label: "Normalize".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: vec![
+                InputSocketType { name: "nrm".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
             ],

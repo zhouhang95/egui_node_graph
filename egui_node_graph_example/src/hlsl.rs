@@ -180,6 +180,10 @@ float Depth(float3 posWS) {
     return dot((posWS - cam_pos), cam_dir);
 }
 
+float3 Normalize(float3 nrm) {
+    return normalize(nrm);
+}
+
 float Min(float a, float b) {
     return min(a, b);
 }
