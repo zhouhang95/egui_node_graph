@@ -176,6 +176,22 @@ float Depth(float3 posWS) {
     return dot((posWS - cam_pos), cam_dir);
 }
 
+float Min(float a, float b) {
+    return min(a, b);
+}
+
+float Max(float a, float b) {
+    return max(a, b);
+}
+
+float Mul(float a, float b) {
+    return a * b;
+}
+
+float Div(float a, float b) {
+    return a / b;
+}
+
 float3 MainTexure2D(float3 uv, out float alpha) {
     float4 texel = tex2D(ObjTexSampler, uv.xy);
     alpha = texel.w;
