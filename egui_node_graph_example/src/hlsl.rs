@@ -196,6 +196,14 @@ float Div(float a, float b) {
     return a / b;
 }
 
+float Lerp(float a, float b, float t) {
+    return lerp(a, b, t);
+}
+
+float3 Lerp3(float3 a, float3 b, float t) {
+    return lerp(a, b, t);
+}
+
 float3 MainTexure2D(float3 uv, out float alpha) {
     float4 texel = tex2D(ObjTexSampler, uv.xy);
     alpha = texel.w;
