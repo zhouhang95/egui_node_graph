@@ -222,7 +222,7 @@ pub struct NodeGraphExample {
     user_state: MyGraphState,
     #[serde(skip)]
     core_gen_code: Option<GenCode>,
-    #[serde(skip)]
+
     path_buf: Option<PathBuf>,
 
     shader_path_buf: Option<PathBuf>,
