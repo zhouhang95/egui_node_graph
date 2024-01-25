@@ -121,6 +121,7 @@ pub enum MyNodeType {
     ToonTexure2D,
     CustomTexture2D,
     Step,
+    SmoothStep,
     ScreenPos,
     WorldPos,
     CameraPos,
@@ -368,6 +369,18 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "edge".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+                InputSocketType { name: "x".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::SmoothStep, NodeTypeInfo {
+            label: "SmoothStep".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: vec![
+                InputSocketType { name: "min".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+                InputSocketType { name: "max".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 } ) },
                 InputSocketType { name: "x".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![

@@ -151,6 +151,10 @@ float Step(float edge, float x) {
     return step(edge, x);
 }
 
+float SmoothStep(float edge0, float edge1, float x) {
+    return smoothstep(edge0, edge1, x);
+}
+
 float3 ScreenPos(float2 screenPos) {
     return float3(screenPos, 0);
 }
