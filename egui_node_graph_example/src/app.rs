@@ -226,6 +226,8 @@ pub struct NodeGraphExample {
     path_buf: Option<PathBuf>,
 
     shader_path_buf: Option<PathBuf>,
+    #[serde(skip)]
+    show_gen_code: bool,
 }
 
 fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
@@ -459,6 +461,7 @@ impl eframe::App for NodeGraphExample {
                         .save_file();
                     self.save_fx_file();
                 }
+                ui.checkbox(&mut self.show_gen_code, "show code");
             });
         });
         let graph_response = egui::CentralPanel::default()
@@ -496,22 +499,23 @@ impl eframe::App for NodeGraphExample {
                 _ => {},
             };
         }
-        #[cfg(debug_assertions)]
-        if let Some(gen_code) = &self.core_gen_code {
-            ctx.debug_painter().text(
-                egui::pos2(10.0, 35.0),
-                egui::Align2::LEFT_TOP,
-                &gen_code.ps_code,
-                TextStyle::Button.resolve(&ctx.style()),
-                egui::Color32::WHITE,
-            );
-            ctx.debug_painter().text(
-                egui::pos2(10.0, 200.0),
-                egui::Align2::LEFT_TOP,
-                &gen_code.sampler_code,
-                TextStyle::Button.resolve(&ctx.style()),
-                egui::Color32::WHITE,
-            );
+        if self.show_gen_code {
+            if let Some(gen_code) = &self.core_gen_code {
+                ctx.debug_painter().text(
+                    egui::pos2(10.0, 35.0),
+                    egui::Align2::LEFT_TOP,
+                    &gen_code.ps_code,
+                    TextStyle::Button.resolve(&ctx.style()),
+                    egui::Color32::WHITE,
+                );
+                ctx.debug_painter().text(
+                    egui::pos2(10.0, 200.0),
+                    egui::Align2::LEFT_TOP,
+                    &gen_code.sampler_code,
+                    TextStyle::Button.resolve(&ctx.style()),
+                    egui::Color32::WHITE,
+                );
+            }
         }
     }
 }

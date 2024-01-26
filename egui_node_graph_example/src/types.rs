@@ -462,7 +462,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 InputSocketType { name: "nrm".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
             ],
             output_sockets: vec![
-                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
         (MyNodeType::Fresenl, NodeTypeInfo {
