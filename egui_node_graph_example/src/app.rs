@@ -314,6 +314,9 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
         else if my_node_type == MyNodeType::ViewDirection {
             params += "vso.posWS"
         }
+        else if my_node_type == MyNodeType::HalfDirection {
+            params += "ViewDirection(vso.posWS)"
+        }
         else if my_node_type == MyNodeType::Fresenl {
             params += ", vso.posWS, vso.nrm"
         }

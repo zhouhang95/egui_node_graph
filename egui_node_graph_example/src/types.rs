@@ -136,6 +136,9 @@ pub enum MyNodeType {
     Lerp3,
     Normalize,
     MatAlpha,
+    Reflect,
+    HalfDirection,
+    ComponentMask,
 }
 
 pub struct AllMyNodeTypes;
@@ -517,6 +520,37 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::Reflect, NodeTypeInfo {
+            label: "Reflect".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: vec![
+                InputSocketType { name: "I".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+                InputSocketType { name: "N".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::ComponentMask, NodeTypeInfo {
+            label: "ComponentMask".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: vec![
+                InputSocketType { name: "vec".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "x".into(), ty: MyDataType::Scalar },
+                OutputSocketType { name: "y".into(), ty: MyDataType::Scalar },
+                OutputSocketType { name: "z".into(), ty: MyDataType::Scalar },
+            ],
+        }),
+        (MyNodeType::HalfDirection, NodeTypeInfo {
+            label: "HalfDirection".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
         (MyNodeType::ViewDirection, NodeTypeInfo {

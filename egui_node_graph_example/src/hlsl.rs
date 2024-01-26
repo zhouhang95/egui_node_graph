@@ -236,6 +236,20 @@ float MatAlpha() {
     return materialDiffuse.w;
 }
 
+float3 Reflect(float3 I, float3 N) {
+    return reflect(I, N);
+}
+
+float3 HalfDirection(float3 v) {
+    return normalize(v - light_dir);
+}
+
+float ComponentMask(float3 vec, out float y, out float z) {
+    y = vec.y;
+    z = vec.z;
+    return vec.x;
+}
+
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
     vso.pos = mul(pos, worldViewProjMatrix);
