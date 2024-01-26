@@ -277,7 +277,7 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
                 }
 
                 let index = indexs[&next_nid];
-                params += &format!("{}_o{}", cg_node_names[index], output_index);
+                params += &format!("{}_{}", cg_node_names[index], output_index);
             } else {
                 match &input_sockets[j].default {
                     Ok(_) => {
@@ -342,14 +342,14 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
                     params += ", ";
                 }
                 params += &format!(
-                    "{}_o{}",
+                    "{}_{}",
                     cg_node_name,
                     k,
                 );
 
                 let output_type = output_sockets[k].ty;
                 ps_code += &format!(
-                    "{} {}_o{};\n",
+                    "{} {}_{};\n",
                     match output_type {
                         MyDataType::Scalar => "float ",
                         MyDataType::Vec3 => "float3",
@@ -361,7 +361,7 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
             }
             let output_type = output_sockets[0].ty;
             let main_cmd = format!(
-                "{} {}_o0 = {}({});",
+                "{} {}_0 = {}({});",
                 match output_type {
                     MyDataType::Scalar => "float ",
                     MyDataType::Vec3 => "float3",
@@ -374,10 +374,10 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
             if i == topological_order.len() - 1 {
                 match output_type {
                     MyDataType::Scalar => {
-                        ps_code += &format!("return float4({}_o0, {}_o0, {}_o0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
+                        ps_code += &format!("return float4({}_0, {}_0, {}_0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
                     },
                     MyDataType::Vec3 => {
-                        ps_code += &format!("return float4({}_o0, 1.0);\n", cg_node_name);
+                        ps_code += &format!("return float4({}_0, 1.0);\n", cg_node_name);
                     },
                 }
             }
