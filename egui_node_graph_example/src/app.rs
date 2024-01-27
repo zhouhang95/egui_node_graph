@@ -228,6 +228,8 @@ pub struct NodeGraphExample {
     shader_path_buf: Option<PathBuf>,
     #[serde(skip)]
     show_gen_code: bool,
+    #[serde(skip)]
+    always_on_top: bool,
 }
 
 fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
@@ -465,6 +467,10 @@ impl eframe::App for NodeGraphExample {
                     self.save_fx_file();
                 }
                 ui.checkbox(&mut self.show_gen_code, "show code");
+                if ui.checkbox(&mut self.always_on_top, "always on top").changed() {
+                    let window_level = if self.always_on_top { egui::WindowLevel::AlwaysOnTop } else { egui::WindowLevel::Normal };
+                    ui.ctx().send_viewport_cmd(egui::ViewportCommand::WindowLevel(window_level));
+                }
             });
         });
         let graph_response = egui::CentralPanel::default()
