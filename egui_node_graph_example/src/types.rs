@@ -33,8 +33,8 @@ impl InputSocketType {
             def
         } else {
             match self.ty {
-                MyDataType::Scalar => MyValueType::Scalar { value: 0.0 },
-                MyDataType::Vec3 => MyValueType::Vec3 { value: [0.0; 3] },
+                MyDataType::Scalar => MyValueType::Scalar { value: None },
+                MyDataType::Vec3 => MyValueType::Vec3 { value: None },
             }
         }
     }
@@ -63,24 +63,30 @@ pub struct NodeTypeInfo {
 #[derive(Copy, Clone, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum MyValueType {
-    Vec3 { value: [f32; 3] },
-    Scalar { value: f32 },
+    Vec3 { value: Option<[f32; 3]> },
+    Scalar { value: Option<f32> },
 }
 
 impl Default for MyValueType {
     fn default() -> Self {
         // NOTE: This is just a dummy `Default` implementation. The library
         // requires it to circumvent some internal borrow checker issues.
-        Self::Scalar { value: 0.0 }
+        Self::Scalar { value: Some(0.0) }
     }
 }
 
 impl  MyValueType {
+    pub fn scalar(value: f32) -> Self {
+        Self::Scalar { value: Some(value) }
+    }
+    pub fn vector(x: f32, y: f32, z: f32) -> Self {
+        Self::Vec3 { value: Some([x, y, z]) }
+    }
     pub fn default_scalar() -> Self {
-        Self::Scalar { value: 0.0 }
+        Self::Scalar { value: Some(0.0) }
     }
     pub fn default_vector() -> Self {
-        Self::Vec3 { value: [0.0; 3] }
+        Self::Vec3 { value: Some([0.0; 3]) }
     }
 }
 
@@ -159,7 +165,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             label: "SubtractScalar".into(),
             categories: vec!["Scalar".into()],
             input_sockets: vec![
-                InputSocketType { name: "v1".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 }) },
+                InputSocketType { name: "v1".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
                 InputSocketType { name: "v2".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![
@@ -193,7 +199,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             label: "SubtractVector".into(),
             categories: vec!["VectorOperations".into()],
             input_sockets: vec![
-                InputSocketType { name: "v1".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::Vec3 { value: [1.0; 3] }) },
+                InputSocketType { name: "v1".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::vector(1.0, 1.0, 1.0)) },
                 InputSocketType { name: "v2".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
             ],
             output_sockets: vec![
@@ -303,7 +309,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             label: "FloatToVector3".into(),
             categories: vec!["VectorOperations".into()],
             input_sockets: vec![
-                InputSocketType { name: "value".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 0.0 }) },
+                InputSocketType { name: "value".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
@@ -334,8 +340,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
-                InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 0.5 }) },
-                InputSocketType { name: "c".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 0.5 }) },
+                InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(0.5)) },
+                InputSocketType { name: "c".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(0.5)) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
@@ -346,8 +352,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
-                InputSocketType { name: "b".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::Vec3 { value: [0.5; 3] }) },
-                InputSocketType { name: "c".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::Vec3 { value: [0.5; 3] }) },
+                InputSocketType { name: "b".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::vector(0.5, 0.5, 0.5)) },
+                InputSocketType { name: "c".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::vector(0.5, 0.5, 0.5)) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
@@ -369,7 +375,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "min".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
-                InputSocketType { name: "max".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 } ) },
+                InputSocketType { name: "max".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0) ) },
                 InputSocketType { name: "x".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![
@@ -381,7 +387,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
-                InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 } ) },
+                InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0) ) },
                 InputSocketType { name: "t".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![
@@ -393,7 +399,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
-                InputSocketType { name: "b".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::Vec3 { value: [1.0; 3] } ) },
+                InputSocketType { name: "b".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::vector(1.0, 1.0, 1.0)) },
                 InputSocketType { name: "t".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![
@@ -454,7 +460,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             label: "Fresenl".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
-                InputSocketType { name: "exp".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 }) },
+                InputSocketType { name: "exp".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
@@ -476,7 +482,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
-                InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 }) },
+                InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
@@ -487,7 +493,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
-                InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 }) },
+                InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
@@ -497,7 +503,7 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             label: "Div".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
-                InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::Scalar { value: 1.0 }) },
+                InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
                 InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![

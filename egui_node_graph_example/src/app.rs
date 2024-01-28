@@ -120,19 +120,23 @@ impl WidgetValueTrait for MyValueType {
         match self {
             MyValueType::Vec3 { value } => {
                 ui.label(param_name);
-                ui.horizontal(|ui| {
-                    ui.label("x");
-                    changed = changed || ui.add(DragValue::new(&mut value[0]).speed(speed)).changed();
-                    ui.label("y");
-                    changed = changed || ui.add(DragValue::new(&mut value[1]).speed(speed)).changed();
-                    ui.label("z");
-                    changed = changed || ui.add(DragValue::new(&mut value[2]).speed(speed)).changed();
-                });
+                if let Some(value) = value {
+                    ui.horizontal(|ui| {
+                        ui.label("x");
+                        changed = changed || ui.add(DragValue::new(&mut value[0]).speed(speed)).changed();
+                        ui.label("y");
+                        changed = changed || ui.add(DragValue::new(&mut value[1]).speed(speed)).changed();
+                        ui.label("z");
+                        changed = changed || ui.add(DragValue::new(&mut value[2]).speed(speed)).changed();
+                    });
+                }
             }
             MyValueType::Scalar { value } => {
                 ui.horizontal(|ui| {
                     ui.label(param_name);
-                    changed = changed || ui.add(DragValue::new(value).speed(speed)).changed();
+                    if let Some(value) = value {
+                        changed = changed || ui.add(DragValue::new(value).speed(speed)).changed();
+                    }
                 });
             }
         }
@@ -285,10 +289,11 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
                     Ok(_) => {
                         match graph[input_id].value {
                             MyValueType::Vec3 { value } => {
+                                let value = value.unwrap();
                                 params += &format!("float3({}, {}, {})", value[0], value[1], value[2]);
                             },
                             MyValueType::Scalar { value } => {
-                                params += &value.to_string();
+                                params += &value.unwrap().to_string();
                             },
                         }
                     },
