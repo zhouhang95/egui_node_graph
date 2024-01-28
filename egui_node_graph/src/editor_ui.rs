@@ -1,4 +1,4 @@
-use std::collections::HashSet;
+use std::collections::{HashMap, HashSet};
 
 use crate::utils::ColorUtils;
 
@@ -234,10 +234,11 @@ where
                     min_pos = min_pos.min(pos);
                 }
             }
+            let mut mapping = HashMap::new();
             for nid in &self.copied_nodes {
                 let node_kind = self.node_kinds[*nid].clone();
                 let pos = self.node_positions[*nid] + Vec2 {x: 0.0, y: 300.0};
-                Self::add_node(
+                let nnid = Self::add_node(
                     node_kind,
                     pos,
                     user_state,
@@ -246,7 +247,33 @@ where
                     &mut self.node_order,
                     &mut self.node_kinds,
                 );
+                mapping.insert(*nid, nnid);
             }
+            let graph = &self.graph;
+            let mut connections = Vec::new();
+            for (nid, nnid) in &mapping {
+                for (j, input_id) in graph[*nid].input_ids().enumerate() {
+                    if let Some(other_output_id) = graph.connection(input_id) {
+                        let next_nid = graph[other_output_id].node;
+                        if let Some(n_next_nid) = mapping.get(&next_nid) {
+                            for (k, (_, oid)) in graph[next_nid].outputs.iter().enumerate() {
+                                if other_output_id == *oid {
+                                    // nid, j, next_nid, k
+                                    // nnid, j, n_next_nid, k
+                                    let input_id = &graph[*nnid].inputs[j].1;
+                                    let output_id = &graph[*n_next_nid].outputs[k].1;
+                                    connections.push((*input_id, *output_id));
+                                }
+                            }
+                        }
+                    } else {
+                    }
+                }
+            }
+            for (input_id, output_id) in &connections {
+                self.graph.connections.insert(*input_id, *output_id);
+            }
+
         }
 
         // This causes the graph editor to use as much free space as it can.
