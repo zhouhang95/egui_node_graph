@@ -276,8 +276,8 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
             if let Some(other_output_id) = graph.connection(input_id) {
                 let next_nid = graph[other_output_id].node;
                 let mut output_index = usize::MAX;
-                for (k, (_, oid)) in graph[next_nid].outputs.iter().enumerate() {
-                    if other_output_id == *oid {
+                for (k, oid) in graph[next_nid].output_ids().enumerate() {
+                    if other_output_id == oid {
                         output_index = k;
                     }
                 }

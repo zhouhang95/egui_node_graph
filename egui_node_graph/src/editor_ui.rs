@@ -258,8 +258,8 @@ where
                     if let Some(other_output_id) = graph.connection(input_id) {
                         let next_nid = graph[other_output_id].node;
                         if let Some(n_next_nid) = mapping.get(&next_nid) {
-                            for (k, (_, oid)) in graph[next_nid].outputs.iter().enumerate() {
-                                if other_output_id == *oid {
+                            for (k, oid) in graph[next_nid].output_ids().enumerate() {
+                                if other_output_id == oid {
                                     // nid, j, next_nid, k
                                     // nnid, j, n_next_nid, k
                                     let input_id = &graph[*nnid].inputs[j].1;
