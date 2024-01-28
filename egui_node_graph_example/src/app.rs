@@ -281,6 +281,11 @@ fn postorder_traversal_vertex_shader(graph: &MyGraph, node_id: NodeId, collect: 
 }
 
 fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>) -> GenCode {
+    let vs_gen = code_gen_vertex_shader(graph, node_id, node_custom_data);
+    eprintln!("{}", vs_gen.ps_code);
+    code_gen_pixel_shader(graph, node_id, node_custom_data)
+}
+fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>) -> GenCode {
     let mut topological_order = Vec::new();
     postorder_traversal_pixel_shader(graph, node_id, &mut topological_order);
     let mut indexs = HashMap::new();
@@ -433,6 +438,140 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
     }
     GenCode {
         ps_code,
+        sampler_code,
+    }
+}
+
+
+fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>) -> GenCode {
+    let mut topological_order = Vec::new();
+    postorder_traversal_vertex_shader(graph, node_id, &mut topological_order);
+    let mut indexs = HashMap::new();
+    let mut cg_node_names = Vec::new();
+    for (i, nid) in topological_order.iter().enumerate() {
+        indexs.insert(nid, i);
+        let label = &graph[*nid].label;
+        let cg_node_name = format!("_{}_{}", i, label);
+        cg_node_names.push(cg_node_name.clone());
+    }
+    let mut vs_code = String::new();
+    let mut sampler_code = String::new();
+    for (i, nid) in topological_order.iter().enumerate() {
+        let label = &graph[*nid].label;
+        let cg_node_name = &cg_node_names[i];
+        let my_node_type = graph[*nid].node_type;
+        let input_sockets = &NODE_TYPE_INFOS[&my_node_type].input_sockets;
+        let mut params = String::new();
+        let mut is_first = true;
+        for (j, (input_name, input_id)) in graph[*nid].inputs.iter().enumerate() {
+            if i == topological_order.len() - 1 && input_name != "posWS" && input_name != "nrmWS" {
+                continue;
+            }
+            if !is_first {
+                params += ", ";
+            }
+            if let Some(other_output_id) = graph.connection(*input_id) {
+                let next_nid = graph[other_output_id].node;
+                let mut output_index = usize::MAX;
+                for (k, oid) in graph[next_nid].output_ids().enumerate() {
+                    if other_output_id == oid {
+                        output_index = k;
+                    }
+                }
+
+                let index = indexs[&next_nid];
+                params += &format!("{}_{}", cg_node_names[index], output_index);
+            } else {
+                match &input_sockets[j].default {
+                    Ok(_) => {
+                        match graph[*input_id].value {
+                            MyValueType::Vec3 { value } => {
+                                let value = value.unwrap();
+                                params += &format!("float3({}, {}, {})", value[0], value[1], value[2]);
+                            },
+                            MyValueType::Scalar { value } => {
+                                params += &value.unwrap().to_string();
+                            },
+                        }
+                    },
+                    Err(def_str) => {
+                        params += def_str;
+
+                    },
+                }
+            }
+            is_first = false;
+        }
+        // ad hoc
+        if my_node_type == MyNodeType::CustomTexture2D {
+            params += &format!(", _{}_sampler", i);
+            let template = r#"
+                texture _{0}_tex < string ResourceName = "{1}"; >;
+                sampler _{0}_sampler = sampler_state {
+                    texture = <_{0}_tex>;
+                };
+                "#.to_owned();
+            let template = template.replace("{0}", &i.to_string());
+            let template = template.replace("{1}", &node_custom_data[nid].replace('\\', "\\\\"));
+            sampler_code +=& &template;
+        }
+        let output_sockets = &NODE_TYPE_INFOS[&my_node_type].output_sockets;
+        if output_sockets.len() > 0 {
+            for k in 1..output_sockets.len() {
+                if !is_first {
+                    params += ", ";
+                }
+                params += &format!(
+                    "{}_{}",
+                    cg_node_name,
+                    k,
+                );
+
+                let output_type = output_sockets[k].ty;
+                vs_code += &format!(
+                    "{} {}_{};\n",
+                    match output_type {
+                        MyDataType::Scalar => "float ",
+                        MyDataType::Vec3 => "float3",
+                    },
+                    cg_node_name,
+                    k,
+                );
+                is_first = false;
+            }
+            let output_type = output_sockets[0].ty;
+            let main_cmd = format!(
+                "{} {}_0 = {}({});",
+                match output_type {
+                    MyDataType::Scalar => "float ",
+                    MyDataType::Vec3 => "float3",
+                },
+                cg_node_name,
+                label,
+                &params,
+            );
+            vs_code += &format!("{}\n", main_cmd);
+            if i == topological_order.len() - 1 {
+                match output_type {
+                    MyDataType::Scalar => {
+                        vs_code += &format!("return float4({}_0, {}_0, {}_0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
+                    },
+                    MyDataType::Vec3 => {
+                        vs_code += &format!("return float4({}_0, 1.0);\n", cg_node_name);
+                    },
+                }
+            }
+        } else {
+            let main_cmd = format!(
+                "return {}({});",
+                label,
+                &params,
+            );
+            vs_code += &format!("{}\n", main_cmd);
+        }
+    }
+    GenCode {
+        ps_code: vs_code,
         sampler_code,
     }
 }
