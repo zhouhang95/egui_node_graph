@@ -12,7 +12,7 @@ use super::*;
 pub trait WidgetValueTrait: Default {
     type Response;
     type UserState;
-    type NodeData;
+    type NodeType;
 
     /// This method will be called for each input parameter with a widget with an disconnected
     /// input only. To display UI for connected inputs use [`WidgetValueTrait::value_widget_connected`].
@@ -25,7 +25,7 @@ pub trait WidgetValueTrait: Default {
         node_id: NodeId,
         ui: &mut egui::Ui,
         user_state: &mut Self::UserState,
-        node_data: &Self::NodeData,
+        node_data: &Self::NodeType,
     ) -> Vec<Self::Response>;
 
     /// This method will be called for each input parameter with a widget with a connected
@@ -41,7 +41,7 @@ pub trait WidgetValueTrait: Default {
         _node_id: NodeId,
         ui: &mut egui::Ui,
         _user_state: &mut Self::UserState,
-        _node_data: &Self::NodeData,
+        _node_data: &Self::NodeType,
     ) -> Vec<Self::Response> {
         ui.label(param_name);
 
@@ -87,9 +87,9 @@ pub trait DataTypeTrait<UserState>: PartialEq + Eq {
     fn name(&self) -> std::borrow::Cow<str>;
 }
 
-/// This trait must be implemented for the `NodeData` generic parameter of the
+/// This trait must be implemented for the `NodeType` generic parameter of the
 /// [`Graph`]. This trait allows customizing some aspects of the node drawing.
-pub trait NodeDataTrait
+pub trait NodeTypeTrait
 where
     Self: Sized,
 {
@@ -223,8 +223,8 @@ impl CategoryTrait for String {
 /// node template is what describes what kinds of nodes can be added to the
 /// graph, what is their name, and what are their input / output parameters.
 pub trait NodeTemplateTrait: Clone {
-    /// Must be set to the custom user `NodeData` type
-    type NodeData;
+    /// Must be set to the custom user `NodeType` type
+    type NodeType;
     /// Must be set to the custom user `DataType` type
     type DataType;
     /// Must be set to the custom user `ValueType` type
@@ -258,14 +258,14 @@ pub trait NodeTemplateTrait: Clone {
     fn node_graph_label(&self, user_state: &mut Self::UserState) -> String;
 
     /// Returns the user data for this node kind.
-    fn user_data(&self, user_state: &mut Self::UserState) -> Self::NodeData;
+    fn node_type(&self, user_state: &mut Self::UserState) -> Self::NodeType;
 
     /// This function is run when this node kind gets added to the graph. The
     /// node will be empty by default, and this function can be used to fill its
     /// parameters.
     fn build_node(
         &self,
-        graph: &mut Graph<Self::NodeData, Self::DataType, Self::ValueType>,
+        graph: &mut Graph<Self::NodeType, Self::DataType, Self::ValueType>,
         user_state: &mut Self::UserState,
         node_id: NodeId,
     );

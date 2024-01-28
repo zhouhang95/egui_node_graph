@@ -4,16 +4,16 @@ use super::*;
 use serde::{Deserialize, Serialize};
 
 /// A node inside the [`Graph`]. Nodes have input and output parameters, stored
-/// as ids. They also contain a custom `NodeData` struct with whatever data the
+/// as ids. They also contain a custom `NodeType` struct with whatever data the
 /// user wants to store per-node.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub struct Node<NodeData> {
+pub struct Node<NodeType> {
     pub id: NodeId,
     pub label: String,
     pub inputs: Vec<(String, InputId)>,
     pub outputs: Vec<(String, OutputId)>,
-    pub user_data: NodeData,
+    pub node_type: NodeType,
 }
 
 /// The three kinds of input params. These describe how the graph must behave
@@ -78,9 +78,9 @@ pub struct OutputParam<DataType> {
 /// crate to represent all the inner references in the data.
 #[derive(Debug, Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub struct Graph<NodeData, DataType, ValueType> {
+pub struct Graph<NodeType, DataType, ValueType> {
     /// The [`Node`]s of the graph
-    pub nodes: SlotMap<NodeId, Node<NodeData>>,
+    pub nodes: SlotMap<NodeId, Node<NodeType>>,
     /// The [`InputParam`]s of the graph
     pub inputs: SlotMap<InputId, InputParam<DataType, ValueType>>,
     /// The [`OutputParam`]s of the graph

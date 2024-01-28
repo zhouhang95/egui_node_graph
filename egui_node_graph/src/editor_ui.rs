@@ -15,7 +15,7 @@ const DISTANCE_TO_CONNECT: f32 = 10.0;
 /// one special `User` variant which can be used by users as the return value
 /// when executing some custom actions in the UI of the node.
 #[derive(Clone, Debug)]
-pub enum NodeResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> {
+pub enum NodeResponse<UserResponse: UserResponseTrait, NodeType: NodeTypeTrait> {
     ConnectEventStarted(NodeId, AnyParameterId),
     ConnectEventEnded {
         output: OutputId,
@@ -31,7 +31,7 @@ pub enum NodeResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> 
     /// contents are passed along with the event.
     DeleteNodeFull {
         node_id: NodeId,
-        node: Node<NodeData>,
+        node: Node<NodeType>,
     },
     DisconnectEvent {
         output: OutputId,
@@ -49,10 +49,10 @@ pub enum NodeResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> 
 /// The return value of [`draw_graph_editor`]. This value can be used to make
 /// user code react to specific events that happened when drawing the graph.
 #[derive(Clone, Debug)]
-pub struct GraphResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> {
+pub struct GraphResponse<UserResponse: UserResponseTrait, NodeType: NodeTypeTrait> {
     /// Events that occurred during this frame of rendering the graph. Check the
     /// [`UserResponse`] type for a description of each event.
-    pub node_responses: Vec<NodeResponse<UserResponse, NodeData>>,
+    pub node_responses: Vec<NodeResponse<UserResponse, NodeType>>,
     /// Is the mouse currently hovering the graph editor? Note that the node
     /// finder is considered part of the graph editor, even when it floats
     /// outside the graph editor rect.
@@ -60,8 +60,8 @@ pub struct GraphResponse<UserResponse: UserResponseTrait, NodeData: NodeDataTrai
     /// Is the mouse currently hovering the node finder?
     pub cursor_in_finder: bool,
 }
-impl<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> Default
-    for GraphResponse<UserResponse, NodeData>
+impl<UserResponse: UserResponseTrait, NodeType: NodeTypeTrait> Default
+    for GraphResponse<UserResponse, NodeType>
 {
     fn default() -> Self {
         Self {
@@ -71,9 +71,9 @@ impl<UserResponse: UserResponseTrait, NodeData: NodeDataTrait> Default
         }
     }
 }
-pub struct GraphNodeWidget<'a, NodeData, DataType, ValueType> {
+pub struct GraphNodeWidget<'a, NodeType, DataType, ValueType> {
     pub position: &'a mut Pos2,
-    pub graph: &'a mut Graph<NodeData, DataType, ValueType>,
+    pub graph: &'a mut Graph<NodeType, DataType, ValueType>,
     pub port_locations: &'a mut PortLocations,
     pub node_rects: &'a mut NodeRects,
     pub node_id: NodeId,
@@ -82,10 +82,10 @@ pub struct GraphNodeWidget<'a, NodeData, DataType, ValueType> {
     pub pan: egui::Vec2,
 }
 
-impl<NodeData, DataType, ValueType, NodeTemplate, UserResponse, UserState, CategoryType>
-    GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserState>
+impl<NodeType, DataType, ValueType, NodeTemplate, UserResponse, UserState, CategoryType>
+    GraphEditorState<NodeType, DataType, ValueType, NodeTemplate, UserState>
 where
-    NodeData: NodeDataTrait<
+    NodeType: NodeTypeTrait<
         Response = UserResponse,
         UserState = UserState,
         DataType = DataType,
@@ -93,9 +93,9 @@ where
     >,
     UserResponse: UserResponseTrait,
     ValueType:
-        WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeData = NodeData>,
+        WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeType = NodeType>,
     NodeTemplate: NodeTemplateTrait<
-        NodeData = NodeData,
+        NodeType = NodeType,
         DataType = DataType,
         ValueType = ValueType,
         UserState = UserState,
@@ -110,8 +110,8 @@ where
         ui: &mut Ui,
         all_kinds: Vec<NodeTemplate>,
         user_state: &mut UserState,
-        prepend_responses: Vec<NodeResponse<UserResponse, NodeData>>,
-    ) -> GraphResponse<UserResponse, NodeData> {
+        prepend_responses: Vec<NodeResponse<UserResponse, NodeType>>,
+    ) -> GraphResponse<UserResponse, NodeType> {
         let clip_rect = ui.clip_rect();
         // Zoom may have never taken place, so ensure we use parent style
         if !self.pan_zoom.started {
@@ -173,13 +173,13 @@ where
         node_kind: NodeTemplate,
         pos: Pos2,
         user_state: &mut UserState,
-        graph: &mut Graph<NodeData, DataType, ValueType>,
+        graph: &mut Graph<NodeType, DataType, ValueType>,
         node_positions: &mut SecondaryMap<NodeId, Pos2>,
         node_order: &mut Vec<NodeId>,
     ) -> NodeId {
         let new_node = graph.add_node(
             node_kind.node_graph_label(user_state),
-            node_kind.user_data(user_state),
+            node_kind.node_type(user_state),
             |graph, node_id| node_kind.build_node(graph, user_state, node_id),
         );
         node_positions.insert( new_node, pos);
@@ -192,8 +192,8 @@ where
         ui: &mut Ui,
         all_kinds: Vec<NodeTemplate>,
         user_state: &mut UserState,
-        prepend_responses: Vec<NodeResponse<UserResponse, NodeData>>,
-    ) -> GraphResponse<UserResponse, NodeData> {
+        prepend_responses: Vec<NodeResponse<UserResponse, NodeType>>,
+    ) -> GraphResponse<UserResponse, NodeType> {
         // This causes the graph editor to use as much free space as it can.
         // (so for windows it will use up to the resizeably set limit
         // and for a Panel it will fill it completely)
@@ -212,7 +212,7 @@ where
 
         // The responses returned from node drawing have side effects that are best
         // executed at the end of this function.
-        let mut delayed_responses: Vec<NodeResponse<UserResponse, NodeData>> = prepend_responses;
+        let mut delayed_responses: Vec<NodeResponse<UserResponse, NodeType>> = prepend_responses;
 
         // Delete selected nodes when Key::Delete is pressed
         if ui.ctx().input(|i| i.key_pressed(Key::Delete)) {
@@ -303,14 +303,14 @@ where
 
             // Find a port to connect to
             fn snap_to_ports<
-                NodeData,
+                NodeType,
                 UserState,
                 DataType: DataTypeTrait<UserState>,
                 ValueType,
                 Key: slotmap::Key + Into<AnyParameterId>,
                 Value,
             >(
-                graph: &Graph<NodeData, DataType, ValueType>,
+                graph: &Graph<NodeType, DataType, ValueType>,
                 port_type: &DataType,
                 ports: &SlotMap<Key, Value>,
                 port_locations: &PortLocations,
@@ -391,7 +391,7 @@ where
 
         // Some responses generate additional responses when processed. These
         // are stored here to report them back to the user.
-        let mut extra_responses: Vec<NodeResponse<UserResponse, NodeData>> = Vec::new();
+        let mut extra_responses: Vec<NodeResponse<UserResponse, NodeType>> = Vec::new();
 
         for response in delayed_responses.iter() {
             match response {
@@ -562,10 +562,10 @@ fn draw_connection(
 #[derive(Clone, Copy, Debug)]
 struct OuterRectMemory(Rect);
 
-impl<'a, NodeData, DataType, ValueType, UserResponse, UserState>
-    GraphNodeWidget<'a, NodeData, DataType, ValueType>
+impl<'a, NodeType, DataType, ValueType, UserResponse, UserState>
+    GraphNodeWidget<'a, NodeType, DataType, ValueType>
 where
-    NodeData: NodeDataTrait<
+    NodeType: NodeTypeTrait<
         Response = UserResponse,
         UserState = UserState,
         DataType = DataType,
@@ -573,7 +573,7 @@ where
     >,
     UserResponse: UserResponseTrait,
     ValueType:
-        WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeData = NodeData>,
+        WidgetValueTrait<Response = UserResponse, UserState = UserState, NodeType = NodeType>,
     DataType: DataTypeTrait<UserState>,
 {
     pub const MAX_NODE_SIZE: [f32; 2] = [200.0, 200.0];
@@ -583,7 +583,7 @@ where
         pan_zoom: &PanZoom,
         ui: &mut Ui,
         user_state: &mut UserState,
-    ) -> Vec<NodeResponse<UserResponse, NodeData>> {
+    ) -> Vec<NodeResponse<UserResponse, NodeType>> {
         let mut child_ui = ui.child_ui_with_id_source(
             Rect::from_min_size(*self.position + self.pan, Self::MAX_NODE_SIZE.into()),
             Layout::default(),
@@ -600,9 +600,9 @@ where
         pan_zoom: &PanZoom,
         ui: &mut Ui,
         user_state: &mut UserState,
-    ) -> Vec<NodeResponse<UserResponse, NodeData>> {
+    ) -> Vec<NodeResponse<UserResponse, NodeType>> {
         let margin = egui::vec2(15.0, 5.0) * pan_zoom.zoom;
-        let mut responses = Vec::<NodeResponse<UserResponse, NodeData>>::new();
+        let mut responses = Vec::<NodeResponse<UserResponse, NodeType>>::new();
 
         let background_color;
         let text_color;
@@ -663,7 +663,7 @@ where
                         .text_style(TextStyle::Button)
                         .color(text_color),
                 ));
-                responses.extend(self.graph[self.node_id].user_data.top_bar_ui(
+                responses.extend(self.graph[self.node_id].node_type.top_bar_ui(
                     ui,
                     self.node_id,
                     self.graph,
@@ -679,7 +679,7 @@ where
             for (param_name, param_id) in inputs {
                 if self.graph[param_id].shown_inline {
                     let height_before = ui.min_rect().bottom();
-                    // NOTE: We want to pass the `user_data` to
+                    // NOTE: We want to pass the `node_type` to
                     // `value_widget`, but we can't since that would require
                     // borrowing the graph twice. Here, we make the
                     // assumption that the value is cheaply replaced, and
@@ -694,7 +694,7 @@ where
                             self.node_id,
                             ui,
                             user_state,
-                            &self.graph[self.node_id].user_data,
+                            &self.graph[self.node_id].node_type,
                         );
 
                         responses.extend(node_responses.into_iter().map(NodeResponse::User));
@@ -704,7 +704,7 @@ where
                             self.node_id,
                             ui,
                             user_state,
-                            &self.graph[self.node_id].user_data,
+                            &self.graph[self.node_id].node_type,
                         );
 
                         responses.extend(node_responses.into_iter().map(NodeResponse::User));
@@ -712,7 +712,7 @@ where
 
                     self.graph[param_id].value = value;
 
-                    self.graph[self.node_id].user_data.separator(
+                    self.graph[self.node_id].node_type.separator(
                         ui,
                         self.node_id,
                         AnyParameterId::Input(param_id),
@@ -730,12 +730,12 @@ where
                 let height_before = ui.min_rect().bottom();
                 responses.extend(
                     self.graph[self.node_id]
-                        .user_data
+                        .node_type
                         .output_ui(ui, self.node_id, self.graph, user_state, &param_name)
                         .into_iter(),
                 );
 
-                self.graph[self.node_id].user_data.separator(
+                self.graph[self.node_id].node_type.separator(
                     ui,
                     self.node_id,
                     AnyParameterId::Output(param_id),
@@ -747,7 +747,7 @@ where
                 output_port_heights.push((height_before + height_after) / 2.0);
             }
 
-            responses.extend(self.graph[self.node_id].user_data.bottom_ui(
+            responses.extend(self.graph[self.node_id].node_type.bottom_ui(
                 ui,
                 self.node_id,
                 self.graph,
@@ -769,14 +769,14 @@ where
         });
 
         #[allow(clippy::too_many_arguments)]
-        fn draw_port<NodeData, DataType, ValueType, UserResponse, UserState>(
+        fn draw_port<NodeType, DataType, ValueType, UserResponse, UserState>(
             pan_zoom: &PanZoom,
             ui: &mut Ui,
-            graph: &Graph<NodeData, DataType, ValueType>,
+            graph: &Graph<NodeType, DataType, ValueType>,
             node_id: NodeId,
             user_state: &mut UserState,
             port_pos: Pos2,
-            responses: &mut Vec<NodeResponse<UserResponse, NodeData>>,
+            responses: &mut Vec<NodeResponse<UserResponse, NodeType>>,
             param_id: AnyParameterId,
             port_locations: &mut PortLocations,
             ongoing_drag: Option<(NodeId, AnyParameterId)>,
@@ -784,7 +784,7 @@ where
         ) where
             DataType: DataTypeTrait<UserState>,
             UserResponse: UserResponseTrait,
-            NodeData: NodeDataTrait,
+            NodeType: NodeTypeTrait,
         {
             let port_type = graph.any_param_type(param_id).unwrap();
 
@@ -921,7 +921,7 @@ where
                 rect: titlebar_rect,
                 rounding,
                 fill: self.graph[self.node_id]
-                    .user_data
+                    .node_type
                     .titlebar_color(ui, self.node_id, self.graph, user_state)
                     .unwrap_or_else(|| background_color.lighten(0.8)),
                 stroke: Stroke::NONE,
@@ -981,7 +981,7 @@ where
         // --- Interaction ---
 
         // Titlebar buttons
-        let can_delete = self.graph.nodes[self.node_id].user_data.can_delete(
+        let can_delete = self.graph.nodes[self.node_id].node_type.can_delete(
             self.node_id,
             self.graph,
             user_state,

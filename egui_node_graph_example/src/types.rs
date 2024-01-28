@@ -11,14 +11,6 @@ pub struct GenCode {
 
 // ========= First, define your user data types =============
 
-/// The NodeData holds a custom data struct inside each node. It's useful to
-/// store additional information that doesn't live in parameters. For this
-/// example, the node data stores the template (i.e. the "type") of the node.
-// #[derive(serde::Serialize, serde::Deserialize)]
-// pub struct MyNodeData {
-//     pub template: MyNodeType,
-// }
-
 /// `DataType`s are what defines the possible range of connections when
 /// attaching two ports together. The graph UI will make sure to not allow
 /// attaching incompatible datatypes.

@@ -14,10 +14,10 @@ pub struct NodeFinder<NodeTemplate> {
     _phantom: PhantomData<NodeTemplate>,
 }
 
-impl<NodeTemplate, NodeData, UserState, CategoryType> NodeFinder<NodeTemplate>
+impl<NodeTemplate, NodeType, UserState, CategoryType> NodeFinder<NodeTemplate>
 where
     NodeTemplate:
-        NodeTemplateTrait<NodeData = NodeData, UserState = UserState, CategoryType = CategoryType>,
+        NodeTemplateTrait<NodeType = NodeType, UserState = UserState, CategoryType = CategoryType>,
     CategoryType: CategoryTrait,
 {
     pub fn new_at(pos: Pos2) -> Self {

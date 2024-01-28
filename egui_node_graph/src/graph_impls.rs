@@ -1,6 +1,6 @@
 use super::*;
 
-impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
+impl<NodeType, DataType, ValueType> Graph<NodeType, DataType, ValueType> {
     pub fn new() -> Self {
         Self {
             nodes: SlotMap::default(),
@@ -13,8 +13,8 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
     pub fn add_node(
         &mut self,
         label: String,
-        user_data: NodeData,
-        f: impl FnOnce(&mut Graph<NodeData, DataType, ValueType>, NodeId),
+        node_type: NodeType,
+        f: impl FnOnce(&mut Graph<NodeType, DataType, ValueType>, NodeId),
     ) -> NodeId {
         let node_id = self.nodes.insert_with_key(|node_id| {
             Node {
@@ -23,7 +23,7 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
                 // These get filled in later by the user function
                 inputs: Vec::default(),
                 outputs: Vec::default(),
-                user_data,
+                node_type,
             }
         });
 
@@ -84,7 +84,7 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
     /// after deleting this node as input-output pairs. Note that one of the two
     /// ids in the pair (the one on `node_id`'s end) will be invalid after
     /// calling this function.
-    pub fn remove_node(&mut self, node_id: NodeId) -> (Node<NodeData>, Vec<(InputId, OutputId)>) {
+    pub fn remove_node(&mut self, node_id: NodeId) -> (Node<NodeType>, Vec<(InputId, OutputId)>) {
         let mut disconnect_events = vec![];
 
         self.connections.retain(|i, o| {
@@ -154,23 +154,23 @@ impl<NodeData, DataType, ValueType> Graph<NodeData, DataType, ValueType> {
     }
 }
 
-impl<NodeData, DataType, ValueType> Default for Graph<NodeData, DataType, ValueType> {
+impl<NodeType, DataType, ValueType> Default for Graph<NodeType, DataType, ValueType> {
     fn default() -> Self {
         Self::new()
     }
 }
 
-impl<NodeData> Node<NodeData> {
+impl<NodeType> Node<NodeType> {
     pub fn inputs<'a, DataType, DataValue>(
         &'a self,
-        graph: &'a Graph<NodeData, DataType, DataValue>,
+        graph: &'a Graph<NodeType, DataType, DataValue>,
     ) -> impl Iterator<Item = &InputParam<DataType, DataValue>> + 'a {
         self.input_ids().map(|id| graph.get_input(id))
     }
 
     pub fn outputs<'a, DataType, DataValue>(
         &'a self,
-        graph: &'a Graph<NodeData, DataType, DataValue>,
+        graph: &'a Graph<NodeType, DataType, DataValue>,
     ) -> impl Iterator<Item = &OutputParam<DataType>> + 'a {
         self.output_ids().map(|id| graph.get_output(id))
     }

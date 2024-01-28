@@ -12,8 +12,8 @@ const MAX_ZOOM: f32 = 2.0;
 
 #[derive(Clone)]
 #[cfg_attr(feature = "persistence", derive(Serialize, Deserialize))]
-pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserState> {
-    pub graph: Graph<NodeData, DataType, ValueType>,
+pub struct GraphEditorState<NodeType, DataType, ValueType, NodeTemplate, UserState> {
+    pub graph: Graph<NodeType, DataType, ValueType>,
     /// Nodes are drawn in this order. Draw order is important because nodes
     /// that are drawn last are on top.
     pub node_order: Vec<NodeId>,
@@ -34,8 +34,8 @@ pub struct GraphEditorState<NodeData, DataType, ValueType, NodeTemplate, UserSta
     pub _user_state: PhantomData<fn() -> UserState>,
 }
 
-impl<NodeData, DataType, ValueType, NodeKind, UserState>
-    GraphEditorState<NodeData, DataType, ValueType, NodeKind, UserState>
+impl<NodeType, DataType, ValueType, NodeKind, UserState>
+    GraphEditorState<NodeType, DataType, ValueType, NodeKind, UserState>
 {
     pub fn new(default_zoom: f32) -> Self {
         Self {
@@ -44,8 +44,8 @@ impl<NodeData, DataType, ValueType, NodeKind, UserState>
         }
     }
 }
-impl<NodeData, DataType, ValueType, NodeKind, UserState> Default
-    for GraphEditorState<NodeData, DataType, ValueType, NodeKind, UserState>
+impl<NodeType, DataType, ValueType, NodeKind, UserState> Default
+    for GraphEditorState<NodeType, DataType, ValueType, NodeKind, UserState>
 {
     fn default() -> Self {
         Self {

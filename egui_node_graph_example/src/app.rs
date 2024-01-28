@@ -50,7 +50,7 @@ impl DataTypeTrait<MyGraphState> for MyDataType {
 // A trait for the node kinds, which tells the library how to build new nodes
 // from the templates in the node finder
 impl NodeTemplateTrait for MyNodeType {
-    type NodeData = MyNodeType;
+    type NodeType = MyNodeType;
     type DataType = MyDataType;
     type ValueType = MyValueType;
     type UserState = MyGraphState;
@@ -71,13 +71,13 @@ impl NodeTemplateTrait for MyNodeType {
         self.node_finder_label(user_state).into()
     }
 
-    fn user_data(&self, _user_state: &mut Self::UserState) -> Self::NodeData {
+    fn node_type(&self, _user_state: &mut Self::UserState) -> Self::NodeType {
         *self
     }
 
     fn build_node(
         &self,
-        graph: &mut Graph<Self::NodeData, Self::DataType, Self::ValueType>,
+        graph: &mut Graph<Self::NodeType, Self::DataType, Self::ValueType>,
         _user_state: &mut Self::UserState,
         node_id: NodeId,
     ) {
@@ -104,7 +104,7 @@ impl NodeTemplateTrait for MyNodeType {
 impl WidgetValueTrait for MyValueType {
     type Response = MyResponse;
     type UserState = MyGraphState;
-    type NodeData = MyNodeType;
+    type NodeType = MyNodeType;
     fn value_widget(
         &mut self,
         param_name: &str,
@@ -146,7 +146,7 @@ impl WidgetValueTrait for MyValueType {
 }
 
 impl UserResponseTrait for MyResponse {}
-impl NodeDataTrait for MyNodeType {
+impl NodeTypeTrait for MyNodeType {
     type Response = MyResponse;
     type UserState = MyGraphState;
     type DataType = MyDataType;
@@ -173,7 +173,7 @@ impl NodeDataTrait for MyNodeType {
         // UIs based on that.
 
         let mut responses = vec![];
-        let node_type = graph[node_id].user_data;
+        let node_type = graph[node_id].node_type;
         let node_custom_data = &mut user_state.node_custom_data;
         if node_type == MyNodeType::CustomTexture2D {
             if ui.button("Open file").clicked() {
@@ -261,7 +261,7 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
     for (i, nid) in topological_order.iter().enumerate() {
         let label = &graph[*nid].label;
         let cg_node_name = &cg_node_names[i];
-        let my_node_type = graph[*nid].user_data;
+        let my_node_type = graph[*nid].node_type;
         let input_sockets = &NODE_TYPE_INFOS[&my_node_type].input_sockets;
         let mut params = String::new();
         let mut is_first = true;
