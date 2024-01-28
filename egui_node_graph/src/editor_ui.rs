@@ -216,34 +216,36 @@ where
             find_copy_node
         }) {
             eprintln!("paste node");
-            let mut all_node_is_contains = true;
-            let mut min_pos = Pos2::ZERO;
-            for (i, nid) in self.copied_nodes.iter().enumerate() {
-                if self.graph.nodes.contains_key(*nid) {
-                    let pos = self.node_positions[*nid];
-                    if i == 0 {
-                        min_pos = pos;
-                    } else {
-                        min_pos = min_pos.min(pos);
-                    }
-                } else {
-                    all_node_is_contains = false;
+            let mut found_node_missing = false;
+            for nid in &self.copied_nodes {
+                if !self.graph.nodes.contains_key(*nid) {
+                    found_node_missing = true;
                 }
             }
-            if all_node_is_contains {
-                for nid in &self.copied_nodes {
-                    let node_kind = self.node_kinds[*nid].clone();
-                    let pos = self.node_positions[*nid] + Vec2 {x: 0.0, y: 300.0};
-                    Self::add_node(
-                        node_kind,
-                        pos,
-                        user_state,
-                        &mut self.graph,
-                        &mut self.node_positions,
-                        &mut self.node_order,
-                        &mut self.node_kinds,
-                    );
+            if found_node_missing {
+                self.copied_nodes.clear();
+            }
+            let mut min_pos = Pos2::ZERO;
+            for (i, nid) in self.copied_nodes.iter().enumerate() {
+                let pos = self.node_positions[*nid];
+                if i == 0 {
+                    min_pos = pos;
+                } else {
+                    min_pos = min_pos.min(pos);
                 }
+            }
+            for nid in &self.copied_nodes {
+                let node_kind = self.node_kinds[*nid].clone();
+                let pos = self.node_positions[*nid] + Vec2 {x: 0.0, y: 300.0};
+                Self::add_node(
+                    node_kind,
+                    pos,
+                    user_state,
+                    &mut self.graph,
+                    &mut self.node_positions,
+                    &mut self.node_order,
+                    &mut self.node_kinds,
+                );
             }
         }
 
