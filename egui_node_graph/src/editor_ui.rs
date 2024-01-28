@@ -108,7 +108,7 @@ where
     pub fn draw_graph_editor(
         &mut self,
         ui: &mut Ui,
-        all_kinds: impl NodeTemplateIter<Item = NodeTemplate>,
+        all_kinds: Vec<NodeTemplate>,
         user_state: &mut UserState,
         prepend_responses: Vec<NodeResponse<UserResponse, NodeData>>,
     ) -> GraphResponse<UserResponse, NodeData> {
@@ -190,7 +190,7 @@ where
     fn draw_graph_editor_inside_zoom(
         &mut self,
         ui: &mut Ui,
-        all_kinds: impl NodeTemplateIter<Item = NodeTemplate>,
+        all_kinds: Vec<NodeTemplate>,
         user_state: &mut UserState,
         prepend_responses: Vec<NodeResponse<UserResponse, NodeData>>,
     ) -> GraphResponse<UserResponse, NodeData> {

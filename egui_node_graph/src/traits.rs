@@ -186,14 +186,6 @@ where
     }
 }
 
-/// This trait can be implemented by any user type. The trait tells the library
-/// how to enumerate the node templates it will present to the user as part of
-/// the node finder.
-pub trait NodeTemplateIter {
-    type Item;
-    fn all_kinds(&self) -> Vec<Self::Item>;
-}
-
 /// Describes a category of nodes.
 ///
 /// Used by [`NodeTemplateTrait::node_finder_categories`] to categorize nodes

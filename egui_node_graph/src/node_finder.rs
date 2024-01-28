@@ -1,6 +1,6 @@
 use std::{collections::BTreeMap, marker::PhantomData};
 
-use crate::{CategoryTrait, NodeTemplateIter, NodeTemplateTrait};
+use crate::{CategoryTrait, NodeTemplateTrait};
 
 use egui::*;
 
@@ -35,7 +35,7 @@ where
     pub fn show(
         &mut self,
         ui: &mut Ui,
-        all_kinds: impl NodeTemplateIter<Item = NodeTemplate>,
+        all_kinds: Vec<NodeTemplate>,
         user_state: &mut UserState,
     ) -> Option<NodeTemplate> {
         let background_color;
@@ -71,7 +71,6 @@ where
                 let max_height = ui.input(|i| i.screen_rect.height() * 0.5);
                 let scroll_area_width = resp.rect.width() - 30.0;
 
-                let all_kinds = all_kinds.all_kinds();
                 let mut categories: BTreeMap<String, Vec<&NodeTemplate>> = Default::default();
                 let mut orphan_kinds = Vec::new();
 

@@ -477,7 +477,7 @@ impl eframe::App for NodeGraphExample {
             .show(ctx, |ui| {
                 self.state.draw_graph_editor(
                     ui,
-                    AllMyNodeTypes,
+                    MyNodeType::iter().collect(),
                     &mut self.user_state,
                     Vec::default(),
                 )

@@ -1,8 +1,7 @@
 use std::collections::HashMap;
 
-use egui_node_graph::NodeTemplateIter;
 use once_cell::sync::Lazy;
-use strum::{EnumIter, IntoEnumIterator};
+use strum::EnumIter;
 
 #[derive(Debug, Clone, Default)]
 pub struct GenCode {
@@ -139,15 +138,6 @@ pub enum MyNodeType {
     Reflect,
     HalfDirection,
     ComponentMask,
-}
-
-pub struct AllMyNodeTypes;
-impl NodeTemplateIter for AllMyNodeTypes {
-    type Item = MyNodeType;
-
-    fn all_kinds(&self) -> Vec<Self::Item> {
-        MyNodeType::iter().collect()
-    }
 }
 
 pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
