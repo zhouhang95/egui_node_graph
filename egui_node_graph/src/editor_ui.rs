@@ -169,6 +169,24 @@ where
         }
     }
 
+    fn add_node(
+        node_kind: NodeTemplate,
+        pos: Pos2,
+        user_state: &mut UserState,
+        graph: &mut Graph<NodeData, DataType, ValueType>,
+        node_positions: &mut SecondaryMap<NodeId, Pos2>,
+        node_order: &mut Vec<NodeId>,
+    ) -> NodeId {
+        let new_node = graph.add_node(
+            node_kind.node_graph_label(user_state),
+            node_kind.user_data(user_state),
+            |graph, node_id| node_kind.build_node(graph, user_state, node_id),
+        );
+        node_positions.insert( new_node, pos);
+        node_order.push(new_node);
+        new_node
+    }
+
     fn draw_graph_editor_inside_zoom(
         &mut self,
         ui: &mut Ui,
@@ -258,18 +276,8 @@ where
             }
             node_finder_area.show(ui.ctx(), |ui| {
                 if let Some(node_kind) = node_finder.show(ui, all_kinds, user_state) {
-                    let new_node = self.graph.add_node(
-                        node_kind.node_graph_label(user_state),
-                        node_kind.user_data(user_state),
-                        |graph, node_id| node_kind.build_node(graph, user_state, node_id),
-                    );
-                    self.node_positions.insert(
-                        new_node,
-                        node_finder.position.unwrap_or(cursor_pos)
-                            - self.pan_zoom.pan
-                            - editor_rect.min.to_vec2(),
-                    );
-                    self.node_order.push(new_node);
+                    let pos = node_finder.position.unwrap_or(cursor_pos) - self.pan_zoom.pan - editor_rect.min.to_vec2();
+                    let new_node = Self::add_node(node_kind, pos, user_state, &mut self.graph, &mut self.node_positions, &mut self.node_order);
 
                     should_close_node_finder = true;
                     delayed_responses.push(NodeResponse::CreatedNode(new_node));
