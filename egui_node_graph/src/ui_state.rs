@@ -32,6 +32,8 @@ pub struct GraphEditorState<NodeType, DataType, ValueType, NodeTemplate, UserSta
     /// The panning of the graph viewport.
     pub pan_zoom: PanZoom,
     pub _user_state: PhantomData<fn() -> UserState>,
+    pub node_kinds: SecondaryMap<NodeId, NodeTemplate>,
+    pub copied_nodes: Vec<NodeId>,
 }
 
 impl<NodeType, DataType, ValueType, NodeKind, UserState>
@@ -58,6 +60,8 @@ impl<NodeType, DataType, ValueType, NodeKind, UserState> Default
             node_finder: Default::default(),
             pan_zoom: Default::default(),
             _user_state: Default::default(),
+            node_kinds: Default::default(),
+            copied_nodes: Default::default(),
         }
     }
 }

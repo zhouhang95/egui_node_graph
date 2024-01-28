@@ -176,6 +176,7 @@ where
         graph: &mut Graph<NodeType, DataType, ValueType>,
         node_positions: &mut SecondaryMap<NodeId, Pos2>,
         node_order: &mut Vec<NodeId>,
+        node_kinds: &mut SecondaryMap<NodeId, NodeTemplate>,
     ) -> NodeId {
         let new_node = graph.add_node(
             node_kind.node_graph_label(user_state),
@@ -183,6 +184,7 @@ where
             |graph, node_id| node_kind.build_node(graph, user_state, node_id),
         );
         node_positions.insert( new_node, pos);
+        node_kinds.insert( new_node, node_kind);
         node_order.push(new_node);
         new_node
     }
@@ -194,6 +196,57 @@ where
         user_state: &mut UserState,
         prepend_responses: Vec<NodeResponse<UserResponse, NodeType>>,
     ) -> GraphResponse<UserResponse, NodeType> {
+        if ui.ctx().input(|i| i.events.contains(&Event::Copy)) {
+            if self.selected_nodes.len() > 0 {
+                ui.ctx().copy_text("command: Copy Nodes".to_string());
+                self.copied_nodes = self.selected_nodes.clone();
+            } else {
+                self.copied_nodes.clear();
+            }
+        }
+        if ui.ctx().input(|i| { 
+            let mut find_copy_node = false;
+            for e in &i.events {
+                if let Event::Paste(msg) = e {
+                    if msg == "command: Copy Nodes" {
+                        find_copy_node = true;
+                    }
+                }
+            }
+            find_copy_node
+        }) {
+            eprintln!("paste node");
+            let mut all_node_is_contains = true;
+            let mut min_pos = Pos2::ZERO;
+            for (i, nid) in self.copied_nodes.iter().enumerate() {
+                if self.graph.nodes.contains_key(*nid) {
+                    let pos = self.node_positions[*nid];
+                    if i == 0 {
+                        min_pos = pos;
+                    } else {
+                        min_pos = min_pos.min(pos);
+                    }
+                } else {
+                    all_node_is_contains = false;
+                }
+            }
+            if all_node_is_contains {
+                for nid in &self.copied_nodes {
+                    let node_kind = self.node_kinds[*nid].clone();
+                    let pos = self.node_positions[*nid] + Vec2 {x: 0.0, y: 300.0};
+                    Self::add_node(
+                        node_kind,
+                        pos,
+                        user_state,
+                        &mut self.graph,
+                        &mut self.node_positions,
+                        &mut self.node_order,
+                        &mut self.node_kinds,
+                    );
+                }
+            }
+        }
+
         // This causes the graph editor to use as much free space as it can.
         // (so for windows it will use up to the resizeably set limit
         // and for a Panel it will fill it completely)
@@ -277,7 +330,7 @@ where
             node_finder_area.show(ui.ctx(), |ui| {
                 if let Some(node_kind) = node_finder.show(ui, all_kinds, user_state) {
                     let pos = node_finder.position.unwrap_or(cursor_pos) - self.pan_zoom.pan - editor_rect.min.to_vec2();
-                    let new_node = Self::add_node(node_kind, pos, user_state, &mut self.graph, &mut self.node_positions, &mut self.node_order);
+                    let new_node = Self::add_node(node_kind, pos, user_state, &mut self.graph, &mut self.node_positions, &mut self.node_order, &mut self.node_kinds);
 
                     should_close_node_finder = true;
                     delayed_responses.push(NodeResponse::CreatedNode(new_node));
