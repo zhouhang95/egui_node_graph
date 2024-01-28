@@ -249,9 +249,40 @@ fn postorder_traversal(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeI
     collect.push(node_id);
 }
 
+fn postorder_traversal_pixel_shader(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
+    for (input_name, input_id) in graph[node_id].inputs.iter() {
+        if input_name == "posWS" || input_name == "nrmWS" {
+            continue;
+        }
+        if let Some(other_output_id) = graph.connection(*input_id) {
+            let next_nid = graph[other_output_id].node;
+            if collect.contains(&next_nid) {
+                continue;
+            }
+            postorder_traversal(graph, next_nid, collect);
+        }
+    }
+    collect.push(node_id);
+}
+
+fn postorder_traversal_vertex_shader(graph: &MyGraph, node_id: NodeId, collect: &mut Vec<NodeId>) {
+    for (input_name, input_id) in graph[node_id].inputs.iter() {
+        if input_name == "posWS" || input_name == "nrmWS" {
+            if let Some(other_output_id) = graph.connection(*input_id) {
+                let next_nid = graph[other_output_id].node;
+                if collect.contains(&next_nid) {
+                    continue;
+                }
+                postorder_traversal(graph, next_nid, collect);
+            }
+        }
+    }
+    collect.push(node_id);
+}
+
 fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>) -> GenCode {
     let mut topological_order = Vec::new();
-    postorder_traversal(graph, node_id, &mut topological_order);
+    postorder_traversal_pixel_shader(graph, node_id, &mut topological_order);
     let mut indexs = HashMap::new();
     let mut cg_node_names = Vec::new();
     for (i, nid) in topological_order.iter().enumerate() {
@@ -269,11 +300,14 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
         let input_sockets = &NODE_TYPE_INFOS[&my_node_type].input_sockets;
         let mut params = String::new();
         let mut is_first = true;
-        for (j, input_id) in graph[*nid].input_ids().enumerate() {
+        for (j, (input_name, input_id)) in graph[*nid].inputs.iter().enumerate() {
+            if input_name == "posWS" || input_name == "nrmWS" {
+                continue;
+            }
             if !is_first {
                 params += ", ";
             }
-            if let Some(other_output_id) = graph.connection(input_id) {
+            if let Some(other_output_id) = graph.connection(*input_id) {
                 let next_nid = graph[other_output_id].node;
                 let mut output_index = usize::MAX;
                 for (k, oid) in graph[next_nid].output_ids().enumerate() {
@@ -287,7 +321,7 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
             } else {
                 match &input_sockets[j].default {
                     Ok(_) => {
-                        match graph[input_id].value {
+                        match graph[*input_id].value {
                             MyValueType::Vec3 { value } => {
                                 let value = value.unwrap();
                                 params += &format!("float3({}, {}, {})", value[0], value[1], value[2]);

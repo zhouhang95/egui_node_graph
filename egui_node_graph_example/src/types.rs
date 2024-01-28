@@ -302,6 +302,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             input_sockets: vec![
                 InputSocketType { name: "color".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
                 InputSocketType { name: "alpha".into(), ty: MyDataType::Scalar, default: Err("MatAlpha()".to_string()) },
+                InputSocketType { name: "posWS".into(), ty: MyDataType::Vec3, default: Err("".to_string()) },
+                InputSocketType { name: "nrmWS".into(), ty: MyDataType::Vec3, default: Err("".to_string()) },
             ],
             output_sockets: Vec::new(),
         }),
