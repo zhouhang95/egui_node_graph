@@ -215,7 +215,6 @@ where
             }
             find_copy_node
         }) {
-            eprintln!("paste node");
             let mut found_node_missing = false;
             for nid in &self.copied_nodes {
                 if !self.graph.nodes.contains_key(*nid) {
@@ -234,10 +233,13 @@ where
                     min_pos = min_pos.min(pos);
                 }
             }
+            let cursor_pos = ui.ctx().input(|i| i.pointer.hover_pos().unwrap_or(Pos2::ZERO));
+            let curr_pos = cursor_pos - self.pan_zoom.pan - ui.max_rect().min.to_vec2();
+            let diff = curr_pos - min_pos;
             let mut mapping = HashMap::new();
             for nid in &self.copied_nodes {
                 let node_kind = self.node_kinds[*nid].clone();
-                let pos = self.node_positions[*nid] + Vec2 {x: 0.0, y: 300.0};
+                let pos = self.node_positions[*nid] + diff;
                 let nnid = Self::add_node(
                     node_kind,
                     pos,
