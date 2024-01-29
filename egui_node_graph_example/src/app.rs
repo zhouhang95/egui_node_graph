@@ -1,9 +1,9 @@
 #![allow(dead_code, unused_imports)]
-use std::{borrow::Cow, collections::HashMap, fmt::format, ops::Index, path::PathBuf};
+use std::{borrow::Cow, collections::HashMap, path::PathBuf};
 
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph::*;
-use strum::{IntoEnumIterator, EnumIter};
+use strum::IntoEnumIterator;
 
 use crate::hlsl::*;
 use crate::types::*;
@@ -294,19 +294,11 @@ fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId,
 fn code_gen_sampler(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>, samplers: &mut HashMap<NodeId, usize>) -> String {
     let mut topological_order = Vec::new();
     postorder_traversal(graph, node_id, &mut topological_order);
-    let mut indexs = HashMap::new();
-    let mut cg_node_names = Vec::new();
-    for (i, nid) in topological_order.iter().enumerate() {
-        indexs.insert(nid, i);
-        let label = &graph[*nid].label;
-        let cg_node_name = format!("_{}_{}", i, label);
-        cg_node_names.push(cg_node_name.clone());
-    }
     let mut sampler_code = String::new();
     for (i, nid) in topological_order.iter().enumerate() {
         let my_node_type = graph[*nid].node_type;
         if my_node_type == MyNodeType::CustomTexture2D {
-            samplers.insert(node_id, i);
+            samplers.insert(*nid, i);
             let template = r#"
                 texture _{0}_tex < string ResourceName = "{1}"; >;
                 sampler _{0}_sampler = sampler_state {
