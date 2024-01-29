@@ -136,6 +136,9 @@ pub enum MyNodeType {
     Reflect,
     HalfDirection,
     ComponentMask,
+    VSPosWS,
+    VSUV0,
+    VSNrmWS,
 }
 
 pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
@@ -302,8 +305,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             input_sockets: vec![
                 InputSocketType { name: "color".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
                 InputSocketType { name: "alpha".into(), ty: MyDataType::Scalar, default: Err("MatAlpha()".to_string()) },
-                InputSocketType { name: "posWS".into(), ty: MyDataType::Vec3, default: Err("".to_string()) },
-                InputSocketType { name: "nrmWS".into(), ty: MyDataType::Vec3, default: Err("".to_string()) },
+                InputSocketType { name: "posWS".into(), ty: MyDataType::Vec3, default: Err("pos.xyz".to_string()) },
+                InputSocketType { name: "nrmWS".into(), ty: MyDataType::Vec3, default: Err("normal".to_string()) },
             ],
             output_sockets: Vec::new(),
         }),
@@ -546,6 +549,30 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
         (MyNodeType::ViewDirection, NodeTypeInfo {
             label: "ViewDirection".into(),
             categories: vec!["Arithmetic".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::VSPosWS, NodeTypeInfo {
+            label: "VSPosWS".into(),
+            categories: vec!["VertexShader".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::VSUV0, NodeTypeInfo {
+            label: "VSUV0".into(),
+            categories: vec!["VertexShader".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::VSNrmWS, NodeTypeInfo {
+            label: "VSNrmWS".into(),
+            categories: vec!["VertexShader".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }

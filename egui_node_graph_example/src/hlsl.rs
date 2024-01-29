@@ -244,6 +244,23 @@ float3 HalfDirection(float3 v) {
     return normalize(v - light_dir);
 }
 
+float3 VSPosWS(float4 pos) {
+    return pos.xyz;
+}
+
+float3 VSUV0(float2 uv) {
+    return float3(uv, 0);
+}
+
+float3 VSNrmWS(float3 normal) {
+    return normal;
+}
+
+void SetPosNrm(float3 pos, float3 nrm, out float3 vs_pos, out float3 vs_nrm) {
+    vs_pos = pos;
+    vs_nrm = nrm;
+}
+
 float ComponentMask(float3 vec, out float y, out float z) {
     y = vec.y;
     z = vec.z;

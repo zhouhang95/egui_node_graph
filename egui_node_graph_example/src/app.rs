@@ -503,7 +503,16 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &H
             is_first = false;
         }
         // ad hoc
-        if my_node_type == MyNodeType::CustomTexture2D {
+        if my_node_type == MyNodeType::VSPosWS {
+            params += "pos";
+        }
+        else if my_node_type == MyNodeType::VSUV0 {
+            params += "uv";
+        }
+        else if my_node_type == MyNodeType::VSNrmWS {
+            params += "normal";
+        }
+        else if my_node_type == MyNodeType::CustomTexture2D {
             params += &format!(", _{}_sampler", i);
             let template = r#"
                 texture _{0}_tex < string ResourceName = "{1}"; >;
@@ -551,20 +560,9 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &H
                 &params,
             );
             vs_code += &format!("{}\n", main_cmd);
-            if i == topological_order.len() - 1 {
-                match output_type {
-                    MyDataType::Scalar => {
-                        vs_code += &format!("return float4({}_0, {}_0, {}_0, 1.0);\n", cg_node_name, cg_node_name, cg_node_name);
-                    },
-                    MyDataType::Vec3 => {
-                        vs_code += &format!("return float4({}_0, 1.0);\n", cg_node_name);
-                    },
-                }
-            }
         } else {
             let main_cmd = format!(
-                "return {}({});",
-                label,
+                "SetPosNrm({}, vso.posWS, vso.nrm);",
                 &params,
             );
             vs_code += &format!("{}\n", main_cmd);
