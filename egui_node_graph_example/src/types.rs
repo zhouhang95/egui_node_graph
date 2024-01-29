@@ -142,10 +142,28 @@ pub enum MyNodeType {
     VSPosWS,
     VSUV0,
     VSNrmWS,
+    TimeSync,
+    TimeFree,
 }
 
 pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
     HashMap::from([
+        (MyNodeType::TimeSync, NodeTypeInfo {
+            label: "TimeSync".into(),
+            categories: vec!["Scalar".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::TimeFree, NodeTypeInfo {
+            label: "TimeFree".into(),
+            categories: vec!["Scalar".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
         (MyNodeType::MakeScalar, NodeTypeInfo {
             label: "MakeScalar".into(),
             categories: vec!["Scalar".into()],

@@ -26,7 +26,8 @@ float3 cam_pos: POSITION<string Object = "Camera";>;
 
 float2 screenSize : VIEWPORTPIXELSIZE;
 
-float ftime : TIME <bool SyncInEditMode=true;>;
+float ftime_sync : TIME <bool SyncInEditMode=true;>;
+float ftime_free : TIME <bool SyncInEditMode=false;>;
 float elapsed_time : ELAPSEDTIME;
 static float fps = 1.0 / elapsed_time;
 
@@ -81,6 +82,14 @@ struct VS_OUTPUT {
 
 float3 MakeVector(float x, float y, float z) {
     return float3(x, y, z);
+}
+
+float TimeSync() {
+    return ftime_sync;
+}
+
+float TimeFree() {
+    return ftime_free;
 }
 
 float3 NormalDirection(float3 v) {
