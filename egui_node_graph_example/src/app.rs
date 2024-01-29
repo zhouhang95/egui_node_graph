@@ -459,6 +459,9 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
 
 
 fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<NodeId, usize>) -> String {
+    if graph[node_id].label != "Main" {
+        return String::new();
+    }
     let mut topological_order = Vec::new();
     postorder_traversal_vertex_shader(graph, node_id, &mut topological_order);
     let mut indexs = HashMap::new();
