@@ -130,6 +130,8 @@ pub enum MyNodeType {
     Min,
     Mul,
     Div,
+    Sin,
+    Cos,
     Lerp,
     Lerp3,
     Normalize,
@@ -511,6 +513,26 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
                 InputSocketType { name: "b".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::Sin, NodeTypeInfo {
+            label: "Sin".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: vec![
+                InputSocketType { name: "v".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::Cos, NodeTypeInfo {
+            label: "Cos".into(),
+            categories: vec!["Arithmetic".into()],
+            input_sockets: vec![
+                InputSocketType { name: "v".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }

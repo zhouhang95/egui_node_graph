@@ -200,6 +200,14 @@ float Div(float a, float b) {
     return a / b;
 }
 
+float Sin(float v) {
+    return sin(v);
+}
+
+float Cos(float v) {
+    return cos(v);
+}
+
 float Lerp(float a, float b, float t) {
     return lerp(a, b, t);
 }
