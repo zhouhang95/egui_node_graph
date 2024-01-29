@@ -567,7 +567,7 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<N
             vs_code += &format!("{}\n", main_cmd);
         } else {
             let main_cmd = format!(
-                "SetPosNrm({}, vso.posWS, vso.nrm);",
+                "SetPosNrm({}, posWS, nrmWS);",
                 &params,
             );
             vs_code += &format!("{}\n", main_cmd);
@@ -585,8 +585,10 @@ impl NodeGraphExample {
                     fx += HLSL_0;
                     fx += &gen_code.sampler_code;
                     fx += HLSL_1;
-                    fx += &gen_code.ps_code;
+                    fx += &gen_code.vs_code;
                     fx += HLSL_2;
+                    fx += &gen_code.ps_code;
+                    fx += HLSL_3;
                     std::fs::write(p, fx).unwrap();
                 }
             },
@@ -699,6 +701,13 @@ impl eframe::App for NodeGraphExample {
                     egui::pos2(10.0, 200.0),
                     egui::Align2::LEFT_TOP,
                     &gen_code.sampler_code,
+                    TextStyle::Button.resolve(&ctx.style()),
+                    egui::Color32::WHITE,
+                );
+                ctx.debug_painter().text(
+                    egui::pos2(10.0, 300.0),
+                    egui::Align2::LEFT_TOP,
+                    &gen_code.vs_code,
                     TextStyle::Button.resolve(&ctx.style()),
                     egui::Color32::WHITE,
                 );

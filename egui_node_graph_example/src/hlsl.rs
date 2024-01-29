@@ -269,17 +269,21 @@ float ComponentMask(float3 vec, out float y, out float z) {
 
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
     VS_OUTPUT vso;
-    vso.pos = mul(pos, worldViewProjMatrix);
-    vso.posWS = mul(pos, worldMatrix).xyz;
+    float3 posWS = pos.xyz;
+    float3 nrmWS = normal;
+    "#;
+    pub const HLSL_2: &str = r#"
+    vso.pos = mul(float4(posWS, 1), worldViewProjMatrix);
+    vso.posWS = posWS;
     vso.screenPos = mad(vso.pos.xy/ vso.pos.w, 0.5, 0.5);
-    vso.nrm = normalize(mul(normal, (float3x3)worldMatrix));
+    vso.nrm = nrmWS;
     vso.uv = float3(uv, 0);
     return vso;
 }
 
 float4 Basic_PS(VS_OUTPUT vso): COLOR0 {
 "#;
-pub const HLSL_2: &str = r#"
+pub const HLSL_3: &str = r#"
 }
 
 technique MainTec <string MMDPass = "object";> {
