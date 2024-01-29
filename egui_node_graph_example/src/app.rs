@@ -281,11 +281,47 @@ fn postorder_traversal_vertex_shader(graph: &MyGraph, node_id: NodeId, collect: 
 }
 
 fn code_gen(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>) -> GenCode {
-    let vs_gen = code_gen_vertex_shader(graph, node_id, node_custom_data);
-    eprintln!("{}", vs_gen.ps_code);
-    code_gen_pixel_shader(graph, node_id, node_custom_data)
+    let mut samplers: HashMap<NodeId, usize> = HashMap::new();
+    let sampler_code = code_gen_sampler(graph, node_id, node_custom_data, &mut samplers);
+    let vs_code = code_gen_vertex_shader(graph, node_id, &samplers);
+    let ps_code = code_gen_pixel_shader(graph, node_id, &samplers);
+    GenCode {
+        vs_code,
+        ps_code,
+        sampler_code,
+    }
 }
-fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>) -> GenCode {
+fn code_gen_sampler(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>, samplers: &mut HashMap<NodeId, usize>) -> String {
+    let mut topological_order = Vec::new();
+    postorder_traversal(graph, node_id, &mut topological_order);
+    let mut indexs = HashMap::new();
+    let mut cg_node_names = Vec::new();
+    for (i, nid) in topological_order.iter().enumerate() {
+        indexs.insert(nid, i);
+        let label = &graph[*nid].label;
+        let cg_node_name = format!("_{}_{}", i, label);
+        cg_node_names.push(cg_node_name.clone());
+    }
+    let mut sampler_code = String::new();
+    for (i, nid) in topological_order.iter().enumerate() {
+        let my_node_type = graph[*nid].node_type;
+        if my_node_type == MyNodeType::CustomTexture2D {
+            samplers.insert(node_id, i);
+            let template = r#"
+                texture _{0}_tex < string ResourceName = "{1}"; >;
+                sampler _{0}_sampler = sampler_state {
+                    texture = <_{0}_tex>;
+                };
+                "#.to_owned();
+            let template = template.replace("{0}", &i.to_string());
+            let template = template.replace("{1}", &node_custom_data[nid].replace('\\', "\\\\"));
+            sampler_code += &template;
+        }
+    }
+    sampler_code
+}
+
+fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<NodeId, usize>) -> String {
     let mut topological_order = Vec::new();
     postorder_traversal_pixel_shader(graph, node_id, &mut topological_order);
     let mut indexs = HashMap::new();
@@ -297,7 +333,6 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &Ha
         cg_node_names.push(cg_node_name.clone());
     }
     let mut ps_code = String::new();
-    let mut sampler_code = String::new();
     for (i, nid) in topological_order.iter().enumerate() {
         let label = &graph[*nid].label;
         let cg_node_name = &cg_node_names[i];
@@ -370,16 +405,7 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &Ha
             params += "vso.posWS"
         }
         else if my_node_type == MyNodeType::CustomTexture2D {
-            params += &format!(", _{}_sampler", i);
-            let template = r#"
-                texture _{0}_tex < string ResourceName = "{1}"; >;
-                sampler _{0}_sampler = sampler_state {
-                    texture = <_{0}_tex>;
-                };
-                "#.to_owned();
-            let template = template.replace("{0}", &i.to_string());
-            let template = template.replace("{1}", &node_custom_data[nid].replace('\\', "\\\\"));
-            sampler_code +=& &template;
+            params += &format!(", _{}_sampler", samplers[nid]);
         }
         let output_sockets = &NODE_TYPE_INFOS[&my_node_type].output_sockets;
         if output_sockets.len() > 0 {
@@ -436,14 +462,11 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &Ha
             ps_code += &format!("{}\n", main_cmd);
         }
     }
-    GenCode {
-        ps_code,
-        sampler_code,
-    }
+    ps_code
 }
 
 
-fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap<NodeId, String>) -> GenCode {
+fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<NodeId, usize>) -> String {
     let mut topological_order = Vec::new();
     postorder_traversal_vertex_shader(graph, node_id, &mut topological_order);
     let mut indexs = HashMap::new();
@@ -455,7 +478,6 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &H
         cg_node_names.push(cg_node_name.clone());
     }
     let mut vs_code = String::new();
-    let mut sampler_code = String::new();
     for (i, nid) in topological_order.iter().enumerate() {
         let label = &graph[*nid].label;
         let cg_node_name = &cg_node_names[i];
@@ -513,16 +535,7 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &H
             params += "normal";
         }
         else if my_node_type == MyNodeType::CustomTexture2D {
-            params += &format!(", _{}_sampler", i);
-            let template = r#"
-                texture _{0}_tex < string ResourceName = "{1}"; >;
-                sampler _{0}_sampler = sampler_state {
-                    texture = <_{0}_tex>;
-                };
-                "#.to_owned();
-            let template = template.replace("{0}", &i.to_string());
-            let template = template.replace("{1}", &node_custom_data[nid].replace('\\', "\\\\"));
-            sampler_code +=& &template;
+            params += &format!(", _{}_sampler", samplers[nid]);
         }
         let output_sockets = &NODE_TYPE_INFOS[&my_node_type].output_sockets;
         if output_sockets.len() > 0 {
@@ -568,10 +581,7 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, node_custom_data: &H
             vs_code += &format!("{}\n", main_cmd);
         }
     }
-    GenCode {
-        ps_code: vs_code,
-        sampler_code,
-    }
+    vs_code
 }
 
 impl NodeGraphExample {

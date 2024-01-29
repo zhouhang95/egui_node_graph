@@ -5,6 +5,7 @@ use strum::EnumIter;
 
 #[derive(Debug, Clone, Default)]
 pub struct GenCode {
+    pub vs_code: String,
     pub ps_code: String,
     pub sampler_code: String,
 }
