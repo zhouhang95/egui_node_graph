@@ -105,6 +105,7 @@ pub enum MyNodeType {
     SubtractVector,
     VectorTimesScalar,
     NormalDirection,
+    FaceNormalDirection,
     LightDirection,
     DotProduct,
     Main,
@@ -243,6 +244,14 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
         }),
         (MyNodeType::NormalDirection, NodeTypeInfo {
             label: "NormalDirection".into(),
+            categories: vec!["GeometryData".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::FaceNormalDirection, NodeTypeInfo {
+            label: "FaceNormalDirection".into(),
             categories: vec!["GeometryData".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![

@@ -388,6 +388,9 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
         if my_node_type == MyNodeType::NormalDirection {
             params += "vso.nrm";
         }
+        else if my_node_type == MyNodeType::FaceNormalDirection {
+            params += "vso.posWS";
+        }
         else if my_node_type == MyNodeType::UV0 {
             params += "vso.uv";
         }

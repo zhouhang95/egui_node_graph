@@ -96,6 +96,10 @@ float3 NormalDirection(float3 v) {
     return v;
 }
 
+float3 FaceNormalDirection(float3 posWS) {
+    return normalize(cross(ddx(posWS), ddy(posWS)));
+}
+
 float3 UV0(float3 v) {
     return v;
 }
@@ -305,15 +309,15 @@ pub const HLSL_3: &str = r#"
 
 technique MainTec <string MMDPass = "object";> {
     pass DrawObject {
-        VertexShader = compile vs_2_0 Basic_VS();
-        PixelShader = compile ps_2_0 Basic_PS();
+        VertexShader = compile vs_3_0 Basic_VS();
+        PixelShader  = compile ps_3_0 Basic_PS();
     }
 }
 
 technique MainTec_ss <string MMDPass = "object_ss";> {
     pass DrawObject {
-        VertexShader = compile vs_2_0 Basic_VS();
-        PixelShader = compile ps_2_0 Basic_PS();
+        VertexShader = compile vs_3_0 Basic_VS();
+        PixelShader  = compile ps_3_0 Basic_PS();
     }
 }
 
@@ -331,8 +335,8 @@ technique EdgeTec < string MMDPass = "edge"; > {
         AlphaBlendEnable = TRUE;
         AlphaTestEnable  = TRUE;
 
-        VertexShader = compile vs_2_0 ColorRender_VS();
-        PixelShader  = compile ps_2_0 ColorRender_PS();
+        VertexShader = compile vs_3_0 ColorRender_VS();
+        PixelShader  = compile ps_3_0 ColorRender_PS();
     }
 #endif
 }
