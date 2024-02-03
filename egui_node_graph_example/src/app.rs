@@ -193,6 +193,7 @@ impl NodeTypeTrait for MyNodeType {
             let mut draw_edge = node_custom_data[&node_id].parse().unwrap();
             if ui.checkbox(&mut draw_edge, "draw edge").changed() {
                 node_custom_data.insert(node_id, draw_edge.to_string());
+                responses.push(NodeResponse::User(MyResponse::ValueChanged));
             }
         }
         let is_active = user_state
