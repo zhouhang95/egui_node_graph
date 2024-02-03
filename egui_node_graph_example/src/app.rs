@@ -188,6 +188,13 @@ impl NodeTypeTrait for MyNodeType {
             node_custom_data.entry(node_id).or_default();
             ui.label(&node_custom_data[&node_id]);
         }
+        else if node_type == MyNodeType::Main {
+            node_custom_data.entry(node_id).or_insert(true.to_string());
+            let mut draw_edge = node_custom_data[&node_id].parse().unwrap();
+            if ui.checkbox(&mut draw_edge, "draw edge").changed() {
+                node_custom_data.insert(node_id, draw_edge.to_string());
+            }
+        }
         let is_active = user_state
             .active_node
             .map(|id| id == node_id)
@@ -308,6 +315,11 @@ fn code_gen_sampler(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap
             let template = template.replace("{0}", &i.to_string());
             let template = template.replace("{1}", &node_custom_data[nid].replace('\\', "\\\\"));
             sampler_code += &template;
+        }
+        else if my_node_type == MyNodeType::Main {
+            if node_custom_data[nid].parse().unwrap() {
+                sampler_code += "#define ENABLE_DRAW_EDGE_PASS\n";
+            }
         }
     }
     sampler_code

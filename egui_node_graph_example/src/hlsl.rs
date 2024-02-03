@@ -13,7 +13,7 @@ float3 materialEmmisive : EMISSIVE < string Object = "Geometry"; >;
 float3 materialSpecular : SPECULAR < string Object = "Geometry"; >;
 float  specularPower    : SPECULARPOWER < string Object = "Geometry"; >;
 float3 materialToon     : TOONCOLOR;
-float3 edgeColor        : EDGECOLOR;
+float4 edgeColor        : EDGECOLOR;
 float3 lightDiffuse     : DIFFUSE   < string Object = "Light"; >;
 float3 lightAmbient     : AMBIENT   < string Object = "Light"; >;
 float3 lightSpecular    : SPECULAR  < string Object = "Light"; >;
@@ -315,5 +315,25 @@ technique MainTec_ss <string MMDPass = "object_ss";> {
         VertexShader = compile vs_2_0 Basic_VS();
         PixelShader = compile ps_2_0 Basic_PS();
     }
+}
+
+float4 ColorRender_VS(float4 Pos : POSITION) : POSITION {
+    return mul( Pos, worldViewProjMatrix );
+}
+
+float4 ColorRender_PS() : COLOR {
+    return edgeColor;
+}
+
+technique EdgeTec < string MMDPass = "edge"; > {
+#ifdef ENABLE_DRAW_EDGE_PASS
+    pass DrawEdge {
+        AlphaBlendEnable = TRUE;
+        AlphaTestEnable  = TRUE;
+
+        VertexShader = compile vs_2_0 ColorRender_VS();
+        PixelShader  = compile ps_2_0 ColorRender_PS();
+    }
+#endif
 }
 "#;
