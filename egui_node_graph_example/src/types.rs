@@ -98,22 +98,22 @@ impl  MyValueType {
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum MyNodeType {
     MakeScalar,
-    AddScalar,
-    SubtractScalar,
+    Add,
+    Sub,
     MakeVector,
-    AddVector,
-    SubtractVector,
+    Add3,
+    Sub3,
     VectorTimesScalar,
-    NormalDirection,
-    FaceNormalDirection,
-    LightDirection,
+    NrmWS,
+    FaceNrmWS,
+    LightDirWS,
     DotProduct,
     Main,
     FloatToVector3,
-    Clamp01Scalar,
-    Clamp01Vector,
-    FMAScalar,
-    FMAVector,
+    Saturate,
+    Saturate3,
+    FMA,
+    FMA3,
     UV0,
     MainTexure2D,
     MatCapTexure2D,
@@ -122,11 +122,11 @@ pub enum MyNodeType {
     Step,
     SmoothStep,
     ScreenPos,
-    WorldPos,
+    PosWS,
     CameraPos,
     Depth,
     Fresenl,
-    ViewDirection,
+    ViewDirWS,
     Max,
     Min,
     Mul,
@@ -175,8 +175,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
             ],
         }),
-        (MyNodeType::AddScalar, NodeTypeInfo {
-            label: "AddScalar".into(),
+        (MyNodeType::Add, NodeTypeInfo {
+            label: "Add".into(),
             categories: vec!["Scalar".into()],
             input_sockets: vec![
                 InputSocketType { name: "v1".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
@@ -186,8 +186,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
             ],
         }),
-        (MyNodeType::SubtractScalar, NodeTypeInfo {
-            label: "SubtractScalar".into(),
+        (MyNodeType::Sub, NodeTypeInfo {
+            label: "Sub".into(),
             categories: vec!["Scalar".into()],
             input_sockets: vec![
                 InputSocketType { name: "v1".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
@@ -209,8 +209,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::AddVector, NodeTypeInfo {
-            label: "AddVector".into(),
+        (MyNodeType::Add3, NodeTypeInfo {
+            label: "Add3".into(),
             categories: vec!["VectorOperations".into()],
             input_sockets: vec![
                 InputSocketType { name: "v1".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
@@ -220,8 +220,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::SubtractVector, NodeTypeInfo {
-            label: "SubtractVector".into(),
+        (MyNodeType::Sub3, NodeTypeInfo {
+            label: "Sub3".into(),
             categories: vec!["VectorOperations".into()],
             input_sockets: vec![
                 InputSocketType { name: "v1".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::vector(1.0, 1.0, 1.0)) },
@@ -242,16 +242,16 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::NormalDirection, NodeTypeInfo {
-            label: "NormalDirection".into(),
+        (MyNodeType::NrmWS, NodeTypeInfo {
+            label: "NrmWS".into(),
             categories: vec!["GeometryData".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::FaceNormalDirection, NodeTypeInfo {
-            label: "FaceNormalDirection".into(),
+        (MyNodeType::FaceNrmWS, NodeTypeInfo {
+            label: "FaceNrmWS".into(),
             categories: vec!["GeometryData".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![
@@ -310,8 +310,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "alpha".into(), ty: MyDataType::Scalar },
             ],
         }),
-        (MyNodeType::LightDirection, NodeTypeInfo {
-            label: "LightDirection".into(),
+        (MyNodeType::LightDirWS, NodeTypeInfo {
+            label: "LightDirWS".into(),
             categories: vec!["Lighting".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![
@@ -350,8 +350,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::Clamp01Scalar, NodeTypeInfo {
-            label: "Clamp01Scalar".into(),
+        (MyNodeType::Saturate, NodeTypeInfo {
+            label: "Saturate".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "value".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
@@ -360,8 +360,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
             ],
         }),
-        (MyNodeType::Clamp01Vector, NodeTypeInfo {
-            label: "Clamp01Vector".into(),
+        (MyNodeType::Saturate3, NodeTypeInfo {
+            label: "Saturate3".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "value".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
@@ -370,8 +370,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::FMAScalar, NodeTypeInfo {
-            label: "FMAScalar".into(),
+        (MyNodeType::FMA, NodeTypeInfo {
+            label: "FMA".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
@@ -382,8 +382,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
             ],
         }),
-        (MyNodeType::FMAVector, NodeTypeInfo {
-            label: "FMAVector".into(),
+        (MyNodeType::FMA3, NodeTypeInfo {
+            label: "FMA3".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "a".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
@@ -449,8 +449,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::WorldPos, NodeTypeInfo {
-            label: "WorldPos".into(),
+        (MyNodeType::PosWS, NodeTypeInfo {
+            label: "PosWS".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![
@@ -596,8 +596,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::ViewDirection, NodeTypeInfo {
-            label: "ViewDirection".into(),
+        (MyNodeType::ViewDirWS, NodeTypeInfo {
+            label: "ViewDirWS".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![

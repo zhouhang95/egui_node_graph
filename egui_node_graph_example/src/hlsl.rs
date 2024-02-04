@@ -92,11 +92,11 @@ float TimeFree() {
     return ftime_free;
 }
 
-float3 NormalDirection(float3 v) {
+float3 NrmWS(float3 v) {
     return v;
 }
 
-float3 FaceNormalDirection(float3 posWS) {
+float3 FaceNrmWS(float3 posWS) {
     return normalize(cross(ddx(posWS), ddy(posWS)));
 }
 
@@ -104,7 +104,7 @@ float3 UV0(float3 v) {
     return v;
 }
 
-float3 LightDirection() {
+float3 LightDirWS() {
     return -light_dir;
 }
 
@@ -116,19 +116,19 @@ float MakeScalar(float v) {
     return v;
 }
 
-float AddScalar(float a, float b) {
+float Add(float a, float b) {
     return a + b;
 }
 
-float SubtractScalar(float a, float b) {
+float Sub(float a, float b) {
     return a - b;
 }
 
-float3 AddVector(float3 a, float3 b) {
+float3 Add3(float3 a, float3 b) {
     return a + b;
 }
 
-float3 SubtractVector(float3 a, float3 b) {
+float3 Sub3(float3 a, float3 b) {
     return a - b;
 }
 
@@ -144,19 +144,19 @@ float3 FloatToVector3(float v) {
     return float3(v, v, v);
 }
 
-float Clamp01Scalar(float v) {
+float Saturate(float v) {
     return saturate(v);
 }
 
-float3 Clamp01Vector(float3 v) {
+float3 Saturate3(float3 v) {
     return saturate(v);
 }
 
-float FMAScalar(float a, float b, float c) {
+float FMA(float a, float b, float c) {
     return mad(a, b, c);
 }
 
-float3 FMAVector(float a, float b, float c) {
+float3 FMA3(float a, float b, float c) {
     return mad(a, b, c);
 }
 
@@ -172,11 +172,11 @@ float3 ScreenPos(float2 screenPos) {
     return float3(screenPos, 0);
 }
 
-float3 WorldPos(float3 pos) {
+float3 PosWS(float3 pos) {
     return pos;
 }
 
-float3 ViewDirection(float3 posWS) {
+float3 ViewDirWS(float3 posWS) {
     return normalize(cam_pos - posWS);
 }
 

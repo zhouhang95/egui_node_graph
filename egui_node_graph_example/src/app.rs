@@ -385,10 +385,10 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
             is_first = false;
         }
         // ad hoc
-        if my_node_type == MyNodeType::NormalDirection {
+        if my_node_type == MyNodeType::NrmWS {
             params += "vso.nrm";
         }
-        else if my_node_type == MyNodeType::FaceNormalDirection {
+        else if my_node_type == MyNodeType::FaceNrmWS {
             params += "vso.posWS";
         }
         else if my_node_type == MyNodeType::UV0 {
@@ -397,14 +397,14 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
         else if my_node_type == MyNodeType::ScreenPos {
             params += "vso.screenPos";
         }
-        else if my_node_type == MyNodeType::WorldPos {
+        else if my_node_type == MyNodeType::PosWS {
             params += "vso.posWS"
         }
-        else if my_node_type == MyNodeType::ViewDirection {
+        else if my_node_type == MyNodeType::ViewDirWS {
             params += "vso.posWS"
         }
         else if my_node_type == MyNodeType::HalfDirection {
-            params += "ViewDirection(vso.posWS)"
+            params += "ViewDirWS(vso.posWS)"
         }
         else if my_node_type == MyNodeType::Fresenl {
             params += ", vso.posWS, vso.nrm"
