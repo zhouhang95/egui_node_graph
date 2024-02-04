@@ -584,7 +584,8 @@ where
             self.connection_in_progress = None;
         }
 
-        if mouse.secondary_released() && cursor_in_editor && !cursor_in_finder {
+        let add_node = (ui.ctx().input(|i| i.key_pressed(Key::A) && i.modifiers.shift_only())) || mouse.secondary_released();
+        if add_node && cursor_in_editor && !cursor_in_finder {
             self.node_finder = Some(NodeFinder::new_at(cursor_pos));
         }
         if ui.ctx().input(|i| i.key_pressed(Key::Escape)) {
