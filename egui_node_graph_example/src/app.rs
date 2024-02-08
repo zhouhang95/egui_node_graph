@@ -406,7 +406,7 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
         else if my_node_type == MyNodeType::HalfDirection {
             params += "ViewDirWS(vso.posWS)"
         }
-        else if my_node_type == MyNodeType::Fresenl {
+        else if my_node_type == MyNodeType::Fresnel {
             params += ", vso.posWS, vso.nrm"
         }
         else if my_node_type == MyNodeType::Depth {

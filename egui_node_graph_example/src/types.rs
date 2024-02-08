@@ -125,7 +125,7 @@ pub enum MyNodeType {
     PosWS,
     CameraPos,
     Depth,
-    Fresenl,
+    Fresnel,
     ViewDirWS,
     Max,
     Min,
@@ -491,8 +491,8 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::Fresenl, NodeTypeInfo {
-            label: "Fresenl".into(),
+        (MyNodeType::Fresnel, NodeTypeInfo {
+            label: "Fresnel".into(),
             categories: vec!["Arithmetic".into()],
             input_sockets: vec![
                 InputSocketType { name: "exp".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },

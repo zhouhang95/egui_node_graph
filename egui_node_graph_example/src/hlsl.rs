@@ -180,7 +180,7 @@ float3 ViewDirWS(float3 posWS) {
     return normalize(cam_pos - posWS);
 }
 
-float3 Fresenl(float exp, float3 posWS, float3 nrmWS) {
+float3 Fresnel(float exp, float3 posWS, float3 nrmWS) {
     float base = 1 - saturate(dot(normalize(cam_pos - posWS), nrmWS));
     return pow(base, exp);
 }
