@@ -3,10 +3,17 @@ use std::{borrow::Cow, collections::HashMap, path::PathBuf};
 
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph::*;
+use encoding::all::BIG5_2003;
+use encoding::all::GBK;
+use encoding::all::WINDOWS_31J;
+use encoding::EncoderTrap;
+use encoding::Encoding;
 use strum::IntoEnumIterator;
 
 use crate::hlsl::*;
 use crate::types::*;
+
+extern "system" { fn GetACP() -> u32; }
 
 /// The response type is used to encode side-effects produced when drawing a
 /// node in the graph. Most side-effects (creating new nodes, deleting existing
@@ -608,7 +615,22 @@ impl NodeGraphExample {
                     fx += HLSL_2;
                     fx += &gen_code.ps_code;
                     fx += HLSL_3;
-                    std::fs::write(p, fx).unwrap();
+                    let cp = unsafe { GetACP() };
+                    if cp == 936 {
+                        let content = GBK.encode(&fx.to_string(), EncoderTrap::Ignore).unwrap();
+                        std::fs::write(p, content).unwrap();
+                    }
+                    else if cp == 950 {
+                        let content = BIG5_2003.encode(&fx.to_string(), EncoderTrap::Ignore).unwrap();
+                        std::fs::write(p, content).unwrap();
+                    }
+                    else if cp == 932 {
+                        let content = WINDOWS_31J.encode(&fx.to_string(), EncoderTrap::Ignore).unwrap();
+                        std::fs::write(p, content).unwrap();
+                    }
+                    else {
+                        std::fs::write(p, fx).unwrap();
+                    }
                 }
             },
             None => {},
