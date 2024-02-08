@@ -1,6 +1,7 @@
 #![allow(dead_code, unused_imports)]
 use std::{borrow::Cow, collections::HashMap, path::PathBuf};
 
+use eframe::egui::{Event, Key};
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph::*;
 use encoding::all::BIG5_2003;
@@ -647,6 +648,24 @@ impl eframe::App for NodeGraphExample {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        if ctx.input(|i| { 
+            let mut found = false;
+            for e in &i.events {
+                if let Event::Key { key, physical_key: _, pressed, repeat: _, modifiers } = e {
+                    if *key == Key::S && *pressed && modifiers.ctrl {
+                        found = true;
+                    }
+                }
+            }
+            found
+        }) {
+            if self.shader_path_buf.is_none() {
+                self.shader_path_buf = rfd::FileDialog::new()
+                    .add_filter("Rusty Object Notation", &["ron"])
+                    .save_file();
+            }
+            self.save_graph();
+        }
         egui::TopBottomPanel::top("top").show(ctx, |ui| {
             ui.horizontal(|ui| {
                 if ui.button("Load Graph").clicked() {
