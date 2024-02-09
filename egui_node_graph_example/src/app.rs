@@ -1,4 +1,5 @@
 #![allow(dead_code, unused_imports)]
+use std::ffi::OsStr;
 use std::{borrow::Cow, collections::HashMap, path::PathBuf};
 
 use eframe::egui::{Event, Key};
@@ -648,6 +649,18 @@ impl eframe::App for NodeGraphExample {
     /// Called each time the UI needs repainting, which may be many times per second.
     /// Put your widgets into a `SidePanel`, `TopPanel`, `CentralPanel`, `Window` or `Area`.
     fn update(&mut self, ctx: &egui::Context, _frame: &mut eframe::Frame) {
+        ctx.input(|i| {
+            if i.raw.dropped_files.len() == 1 {
+                let f = i.raw.dropped_files[0].clone();
+                if let Some(p) = &f.path {
+                    let ext = p.extension().unwrap_or_default().to_ascii_lowercase();
+                    if ext == OsStr::new("ron") {
+                        let string = std::fs::read_to_string(p).unwrap();
+                        *self = ron::de::from_str(&string).unwrap();
+                    }
+                }
+            }
+        });
         if ctx.input(|i| { 
             let mut found = false;
             for e in &i.events {
