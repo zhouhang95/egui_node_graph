@@ -221,6 +221,14 @@ float Cos(float v) {
     return cos(v);
 }
 
+float Route(float v) {
+    return v;
+}
+
+float3 Route3(float3 v) {
+    return v;
+}
+
 float Lerp(float a, float b, float t) {
     return lerp(a, b, t);
 }
@@ -247,9 +255,12 @@ float3 ToonTexure2D(float3 uv, out float alpha) {
     return texel.xyz;
 }
 
-float3 CustomTexture2D(float3 uv, sampler s, out float alpha) {
+float3 CustomTexture2D(float3 uv, sampler s, out float alpha, out float r, out float g, out float b) {
     float4 texel = tex2D(s, uv.xy);
     alpha = texel.w;
+    r = texel.x;
+    g = texel.y;
+    b = texel.z;
     return texel.xyz;
 }
 

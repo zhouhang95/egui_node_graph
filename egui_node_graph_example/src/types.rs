@@ -145,6 +145,8 @@ pub enum MyNodeType {
     VSNrmWS,
     TimeSync,
     TimeFree,
+    Route,
+    Route3,
 }
 
 pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
@@ -303,11 +305,14 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             label: "CustomTexture2D".into(),
             categories: vec!["Main".into()],
             input_sockets: vec![
-                InputSocketType { name: "uv".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+                InputSocketType { name: "uv".into(), ty: MyDataType::Vec3, default: Err("vso.uv".to_string()) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
                 OutputSocketType { name: "alpha".into(), ty: MyDataType::Scalar },
+                OutputSocketType { name: "r".into(), ty: MyDataType::Scalar },
+                OutputSocketType { name: "g".into(), ty: MyDataType::Scalar },
+                OutputSocketType { name: "b".into(), ty: MyDataType::Scalar },
             ],
         }),
         (MyNodeType::LightDirWS, NodeTypeInfo {
@@ -624,6 +629,26 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             label: "VSNrmWS".into(),
             categories: vec!["VertexShader".into()],
             input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::Route, NodeTypeInfo {
+            label: "Route".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+                InputSocketType { name: "v".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::Route3, NodeTypeInfo {
+            label: "Route3".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+                InputSocketType { name: "v".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
