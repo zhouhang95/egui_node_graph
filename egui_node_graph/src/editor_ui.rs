@@ -16,6 +16,9 @@ const DISTANCE_TO_CONNECT: f32 = 10.0;
 /// when executing some custom actions in the UI of the node.
 #[derive(Clone, Debug)]
 pub enum NodeResponse<UserResponse: UserResponseTrait, NodeType: NodeTypeTrait> {
+    DropFilesEvent {
+        dropped_files: Vec<DroppedFile>,
+    },
     ConnectEventStarted(NodeId, AnyParameterId),
     ConnectEventEnded {
         output: OutputId,
@@ -305,6 +308,12 @@ where
             }
         }
 
+        ui.ctx().input(|i| {
+            if i.raw.dropped_files.len() > 0 {
+                delayed_responses.push(NodeResponse::DropFilesEvent { dropped_files: i.raw.dropped_files.clone() });
+            }
+        });
+
         // Used to detect when the background was clicked
         let mut click_on_background = false;
 
@@ -542,6 +551,8 @@ where
                 }
                 NodeResponse::DeleteNodeFull { .. } => {
                     unreachable!("The UI should never produce a DeleteNodeFull event.")
+                }
+                NodeResponse::DropFilesEvent { .. } => {
                 }
             }
         }
