@@ -16,7 +16,7 @@ strum = { version = "0.25", features = ["derive"] }
 ron = { version = "0.8" }
 once_cell = "1"
 encoding = "0.2.33"
-
+clipboard-win = "5"
 [features]
 default = ["serde", "egui_node_graph/persistence"]
 persistence = ["serde", "egui_node_graph/persistence", "eframe/persistence"]

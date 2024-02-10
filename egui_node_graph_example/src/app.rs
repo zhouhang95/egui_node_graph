@@ -2,6 +2,7 @@
 use std::ffi::OsStr;
 use std::{borrow::Cow, collections::HashMap, path::PathBuf};
 
+use clipboard_win::{formats, get_clipboard};
 use eframe::egui::{DroppedFile, Event, Key};
 use eframe::egui::{self, DragValue, TextStyle};
 use egui_node_graph::*;
@@ -189,11 +190,19 @@ impl NodeTypeTrait for MyNodeType {
         let node_type = graph[node_id].node_type;
         let node_custom_data = &mut user_state.node_custom_data;
         if node_type == MyNodeType::CustomTexture2D {
-            if ui.button("Open file").clicked() {
-                if let Some(f) = rfd::FileDialog::new().pick_file() {
-                    node_custom_data.insert(node_id, f.to_string_lossy().to_string());
+            ui.horizontal(|ui| {
+                if ui.button("Open file").clicked() {
+                    if let Some(f) = rfd::FileDialog::new().pick_file() {
+                        node_custom_data.insert(node_id, f.to_string_lossy().to_string());
+                    }
                 }
-            }
+                if ui.button("Paste path").clicked() {
+                    if let Ok(result) = get_clipboard(formats::FileList) {
+                        node_custom_data.insert(node_id, result[0].clone());
+                    }
+                }
+            });
+
             node_custom_data.entry(node_id).or_default();
             ui.label(&node_custom_data[&node_id]);
         }
