@@ -156,7 +156,7 @@ float FMA(float a, float b, float c) {
     return mad(a, b, c);
 }
 
-float3 FMA3(float a, float b, float c) {
+float3 FMA3(float3 a, float3 b, float3 c) {
     return mad(a, b, c);
 }
 
@@ -262,6 +262,33 @@ float3 CustomTexture2D(float3 uv, sampler s, out float alpha, out float r, out f
     g = texel.y;
     b = texel.z;
     return texel.xyz;
+}
+
+float3 Hue(float v) {
+    return saturate(3.0*abs(1.0-2.0*frac(v+float3(0.0,-1.0/3.0,1.0/3.0)))-1);
+}
+
+float3 HsvToRgb(float h, float s, float v) {
+    return lerp(float3(1,1,1), Hue(h), s) * v;
+}
+
+float3 RgbToHsv(float3 rgb, out float h, out float s, out float v) {
+    float4 node_1363_k = float4(0.0, -1.0 / 3.0, 2.0 / 3.0, -1.0);
+    float4 node_1363_p = lerp(float4(float4(rgb,0.0).zy, node_1363_k.wz), float4(float4(rgb,0.0).yz, node_1363_k.xy), step(float4(rgb,0.0).z, float4(rgb,0.0).y));
+    float4 node_1363_q = lerp(float4(node_1363_p.xyw, float4(rgb,0.0).x), float4(float4(rgb,0.0).x, node_1363_p.yzx), step(node_1363_p.x, float4(rgb,0.0).x));
+    float node_1363_d = node_1363_q.x - min(node_1363_q.w, node_1363_q.y);
+    float node_1363_e = 1.0e-10;
+    float3 hsv = float3(abs(node_1363_q.z + (node_1363_q.w - node_1363_q.y) / (6.0 * node_1363_d + node_1363_e)), node_1363_d / (node_1363_q.x + node_1363_e), node_1363_q.x);
+    h = hsv.r;
+    s = hsv.g;
+    v = hsv.b;
+    return hsv;
+}
+
+float3 AdjustHsv(float3 rgb, float h_, float s_, float v_) {
+    float h, s, v;
+    RgbToHsv(rgb, h, s, v);
+    return HsvToRgb(h + h_, s * s_, v * v_);
 }
 
 float MatAlpha() {

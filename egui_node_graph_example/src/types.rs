@@ -147,6 +147,9 @@ pub enum MyNodeType {
     TimeFree,
     Route,
     Route3,
+    RgbToHsv,
+    HsvToRgb,
+    AdjustHsv,
 }
 
 pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
@@ -313,6 +316,44 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "r".into(), ty: MyDataType::Scalar },
                 OutputSocketType { name: "g".into(), ty: MyDataType::Scalar },
                 OutputSocketType { name: "b".into(), ty: MyDataType::Scalar },
+            ],
+        }),
+        (MyNodeType::RgbToHsv, NodeTypeInfo {
+            label: "RgbToHsv".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+                InputSocketType { name: "rgb".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+                OutputSocketType { name: "h".into(), ty: MyDataType::Scalar },
+                OutputSocketType { name: "s".into(), ty: MyDataType::Scalar },
+                OutputSocketType { name: "v".into(), ty: MyDataType::Scalar },
+            ],
+        }),
+        (MyNodeType::HsvToRgb, NodeTypeInfo {
+            label: "HsvToRgb".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+                InputSocketType { name: "h".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+                InputSocketType { name: "s".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+                InputSocketType { name: "v".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+            ],
+        }),
+        (MyNodeType::AdjustHsv, NodeTypeInfo {
+            label: "AdjustHsv".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+                InputSocketType { name: "rgb".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+                InputSocketType { name: "h".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+                InputSocketType { name: "s".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
+                InputSocketType { name: "v".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
             ],
         }),
         (MyNodeType::LightDirWS, NodeTypeInfo {
