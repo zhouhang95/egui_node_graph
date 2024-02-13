@@ -406,6 +406,9 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
         if my_node_type == MyNodeType::NrmWS {
             params += "vso.nrm";
         }
+        else if my_node_type == MyNodeType::NrmVS {
+            params += "vso.nrm";
+        }
         else if my_node_type == MyNodeType::FaceNrmWS {
             params += "vso.posWS";
         }

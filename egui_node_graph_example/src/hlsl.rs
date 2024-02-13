@@ -96,6 +96,10 @@ float3 NrmWS(float3 v) {
     return v;
 }
 
+float3 NrmVS(float3 v) {
+    return mul(v, (float3x3)viewMatrix);
+}
+
 float3 FaceNrmWS(float3 posWS) {
     return normalize(cross(ddx(posWS), ddy(posWS)));
 }

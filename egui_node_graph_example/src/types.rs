@@ -105,6 +105,7 @@ pub enum MyNodeType {
     Sub3,
     VectorTimesScalar,
     NrmWS,
+    NrmVS,
     FaceNrmWS,
     LightDirWS,
     DotProduct,
@@ -249,6 +250,14 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
         }),
         (MyNodeType::NrmWS, NodeTypeInfo {
             label: "NrmWS".into(),
+            categories: vec!["GeometryData".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::NrmVS, NodeTypeInfo {
+            label: "NrmVS".into(),
             categories: vec!["GeometryData".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![
