@@ -120,6 +120,18 @@ float MakeScalar(float v) {
     return v;
 }
 
+float Pow(float x, float y) {
+    return pow(x, y);
+}
+
+float3 Pow3(float3 x, float y) {
+    return pow(x, y);
+}
+
+float Sqrt(float x) {
+    return sqrt(x);
+}
+
 float Add(float a, float b) {
     return a + b;
 }
@@ -259,7 +271,7 @@ float3 ToonTexure2D(float3 uv, out float alpha) {
     return texel.xyz;
 }
 
-float3 CustomTexture2D(float3 uv, sampler s, out float alpha, out float r, out float g, out float b) {
+float3 CustomTexture2D(float3 uv, sampler s, out float r, out float g, out float b, out float alpha) {
     float4 texel = tex2D(s, uv.xy);
     alpha = texel.w;
     r = texel.x;

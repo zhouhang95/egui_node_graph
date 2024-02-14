@@ -115,6 +115,9 @@ pub enum MyNodeType {
     Saturate3,
     FMA,
     FMA3,
+    Pow,
+    Pow3,
+    Sqrt,
     UV0,
     MainTexure2D,
     MatCapTexure2D,
@@ -187,6 +190,38 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             input_sockets: vec![
                 InputSocketType { name: "v1".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
                 InputSocketType { name: "v2".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::Pow, NodeTypeInfo {
+            label: "Pow".into(),
+            categories: vec!["Scalar".into()],
+            input_sockets: vec![
+                InputSocketType { name: "x".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+                InputSocketType { name: "y".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::Pow3, NodeTypeInfo {
+            label: "Pow3".into(),
+            categories: vec!["Scalar".into()],
+            input_sockets: vec![
+                InputSocketType { name: "x".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+                InputSocketType { name: "y".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::Sqrt, NodeTypeInfo {
+            label: "Sqrt".into(),
+            categories: vec!["Scalar".into()],
+            input_sockets: vec![
+                InputSocketType { name: "x".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
@@ -321,10 +356,10 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
-                OutputSocketType { name: "alpha".into(), ty: MyDataType::Scalar },
                 OutputSocketType { name: "r".into(), ty: MyDataType::Scalar },
                 OutputSocketType { name: "g".into(), ty: MyDataType::Scalar },
                 OutputSocketType { name: "b".into(), ty: MyDataType::Scalar },
+                OutputSocketType { name: "alpha".into(), ty: MyDataType::Scalar },
             ],
         }),
         (MyNodeType::RgbToHsv, NodeTypeInfo {
