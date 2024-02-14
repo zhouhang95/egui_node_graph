@@ -225,6 +225,10 @@ float Mul(float a, float b) {
     return a * b;
 }
 
+float3 Mul3(float3 a, float3 b) {
+    return a * b;
+}
+
 float Div(float a, float b) {
     return a / b;
 }
