@@ -145,9 +145,9 @@ pub enum MyNodeType {
     Reflect,
     HalfDirection,
     ComponentMask,
-    VSPosWS,
-    VSUV0,
-    VSNrmWS,
+    VertexPosWS,
+    VertexUV0,
+    VertexNrmWS,
     TimeSync,
     TimeFree,
     Route,
@@ -706,24 +706,24 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::VSPosWS, NodeTypeInfo {
-            label: "VSPosWS".into(),
+        (MyNodeType::VertexPosWS, NodeTypeInfo {
+            label: "VertexPosWS".into(),
             categories: vec!["VertexShader".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::VSUV0, NodeTypeInfo {
-            label: "VSUV0".into(),
+        (MyNodeType::VertexUV0, NodeTypeInfo {
+            label: "VertexUV0".into(),
             categories: vec!["VertexShader".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
             ],
         }),
-        (MyNodeType::VSNrmWS, NodeTypeInfo {
-            label: "VSNrmWS".into(),
+        (MyNodeType::VertexNrmWS, NodeTypeInfo {
+            label: "VertexNrmWS".into(),
             categories: vec!["VertexShader".into()],
             input_sockets: Vec::new(),
             output_sockets: vec![

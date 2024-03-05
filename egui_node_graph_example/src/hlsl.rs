@@ -323,15 +323,15 @@ float3 HalfDirection(float3 v) {
     return normalize(v - light_dir);
 }
 
-float3 VSPosWS(float4 pos) {
+float3 VertexPosWS(float4 pos) {
     return pos.xyz;
 }
 
-float3 VSUV0(float2 uv) {
+float3 VertexUV0(float2 uv) {
     return float3(uv, 0);
 }
 
-float3 VSNrmWS(float3 normal) {
+float3 VertexNrmWS(float3 normal) {
     return normal;
 }
 

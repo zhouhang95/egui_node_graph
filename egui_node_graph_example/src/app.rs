@@ -557,13 +557,13 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<N
             is_first = false;
         }
         // ad hoc
-        if my_node_type == MyNodeType::VSPosWS {
+        if my_node_type == MyNodeType::VertexPosWS {
             params += "pos";
         }
-        else if my_node_type == MyNodeType::VSUV0 {
+        else if my_node_type == MyNodeType::VertexUV0 {
             params += "uv";
         }
-        else if my_node_type == MyNodeType::VSNrmWS {
+        else if my_node_type == MyNodeType::VertexNrmWS {
             params += "normal";
         }
         else if my_node_type == MyNodeType::CustomTexture2D {
