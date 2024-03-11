@@ -119,6 +119,7 @@ pub enum MyNodeType {
     Pow3,
     Sqrt,
     UV0,
+    UV1,
     MainTexure2D,
     MatCapTexure2D,
     ToonTexure2D,
@@ -147,6 +148,7 @@ pub enum MyNodeType {
     ComponentMask,
     VertexPosWS,
     VertexUV0,
+    VertexUV1,
     VertexNrmWS,
     TimeSync,
     TimeFree,
@@ -314,6 +316,15 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             input_sockets: Vec::new(),
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::UV1, NodeTypeInfo {
+            label: "UV1".into(),
+            categories: vec!["GeometryData".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+                OutputSocketType { name: "w".into(), ty: MyDataType::Scalar },
             ],
         }),
         (MyNodeType::MainTexure2D, NodeTypeInfo {
@@ -720,6 +731,15 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             input_sockets: Vec::new(),
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::VertexUV1, NodeTypeInfo {
+            label: "VertexUV1".into(),
+            categories: vec!["VertexShader".into()],
+            input_sockets: Vec::new(),
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+                OutputSocketType { name: "w".into(), ty: MyDataType::Scalar },
             ],
         }),
         (MyNodeType::VertexNrmWS, NodeTypeInfo {

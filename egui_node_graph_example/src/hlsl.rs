@@ -77,6 +77,7 @@ struct VS_OUTPUT {
     float3 uv: TEXCOORD1;
     float3 nrm: TEXCOORD2;
     float2 screenPos: TEXCOORD3;
+    float4 uv1: TEXCOORD4;
     float3 posWS: TEXCOORD5;
 };
 
@@ -106,6 +107,11 @@ float3 FaceNrmWS(float3 posWS) {
 
 float3 UV0(float3 v) {
     return v;
+}
+
+float3 UV1(float4 v, out float w) {
+    w = v.w;
+    return v.xyz;
 }
 
 float3 LightDirWS() {
@@ -331,6 +337,11 @@ float3 VertexUV0(float2 uv) {
     return float3(uv, 0);
 }
 
+float3 VertexUV1(float4 uv, out float w) {
+    w = uv.w;
+    return uv.xyz;
+}
+
 float3 VertexNrmWS(float3 normal) {
     return normal;
 }
@@ -346,7 +357,7 @@ float ComponentMask(float3 vec, out float y, out float z) {
     return vec.x;
 }
 
-VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0) {
+VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0, float4 uv1: TEXCOORD1) {
     VS_OUTPUT vso;
     float3 posWS = pos.xyz;
     float3 nrmWS = normal;
@@ -357,6 +368,7 @@ VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCO
     vso.screenPos = mad(vso.pos.xy/ vso.pos.w, 0.5, 0.5);
     vso.nrm = nrmWS;
     vso.uv = float3(uv, 0);
+    vso.uv1 = uv1;
     return vso;
 }
 

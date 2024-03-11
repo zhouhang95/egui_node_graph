@@ -415,6 +415,9 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
         else if my_node_type == MyNodeType::UV0 {
             params += "vso.uv";
         }
+        else if my_node_type == MyNodeType::UV1 {
+            params += "vso.uv1, ";
+        }
         else if my_node_type == MyNodeType::ScreenPos {
             params += "vso.screenPos";
         }
@@ -562,6 +565,9 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<N
         }
         else if my_node_type == MyNodeType::VertexUV0 {
             params += "uv";
+        }
+        else if my_node_type == MyNodeType::VertexUV1 {
+            params += "uv1";
         }
         else if my_node_type == MyNodeType::VertexNrmWS {
             params += "normal";
