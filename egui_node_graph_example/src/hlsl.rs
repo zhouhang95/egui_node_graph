@@ -255,6 +255,14 @@ float3 Route3(float3 v) {
     return v;
 }
 
+float ControlObject(float v) {
+    return v;
+}
+
+float3 ControlObject3(float3 v) {
+    return v;
+}
+
 float Lerp(float a, float b, float t) {
     return lerp(a, b, t);
 }

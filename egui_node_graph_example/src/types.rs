@@ -94,7 +94,7 @@ impl  MyValueType {
 /// NodeTemplate is a mechanism to define node templates. It's what the graph
 /// will display in the "new node" popup. The user code needs to tell the
 /// library how to convert a NodeTemplate into a Node.
-#[derive(EnumIter, Clone, Copy, PartialEq, Eq, Hash)]
+#[derive(EnumIter, Clone, Copy, PartialEq, Eq, Hash, Debug)]
 #[derive(serde::Serialize, serde::Deserialize)]
 pub enum MyNodeType {
     MakeScalar,
@@ -157,6 +157,8 @@ pub enum MyNodeType {
     RgbToHsv,
     HsvToRgb,
     AdjustHsv,
+    ControlObject,
+    ControlObject3,
 }
 
 pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
@@ -765,6 +767,24 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Utility".into()],
             input_sockets: vec![
                 InputSocketType { name: "v".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::ControlObject, NodeTypeInfo {
+            label: "ControlObject".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Scalar }
+            ],
+        }),
+        (MyNodeType::ControlObject3, NodeTypeInfo {
+            label: "ControlObject3".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }

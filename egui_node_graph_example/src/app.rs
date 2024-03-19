@@ -214,6 +214,27 @@ impl NodeTypeTrait for MyNodeType {
                 responses.push(NodeResponse::User(MyResponse::ValueChanged));
             }
         }
+        else if node_type == MyNodeType::ControlObject {
+            node_custom_data.entry(node_id).or_insert("(self)`".to_string());
+            let record = node_custom_data[&node_id].clone();
+            let records: Vec<_> = record.split('`').collect();
+            let mut object = records[0].to_string();
+            let mut changed_0 = false;
+            ui.horizontal(|ui| {
+                ui.label("Object:");
+                changed_0 = ui.text_edit_singleline(&mut object).changed();
+            });
+            let mut item = records[1].to_string();
+            let mut changed_1 = false;
+            ui.horizontal(|ui| {
+                ui.label("Item:");
+                changed_1 = ui.text_edit_singleline(&mut item).changed();
+            });
+            if changed_0 || changed_1 {
+                node_custom_data.insert(node_id, format!("{}`{}", object, item));
+                responses.push(NodeResponse::User(MyResponse::ValueChanged));
+            }
+        }
         let is_active = user_state
             .active_node
             .map(|id| id == node_id)
@@ -323,8 +344,8 @@ fn code_gen_sampler(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap
     let mut sampler_code = String::new();
     for (i, nid) in topological_order.iter().enumerate() {
         let my_node_type = graph[*nid].node_type;
+        samplers.insert(*nid, i);
         if my_node_type == MyNodeType::CustomTexture2D {
-            samplers.insert(*nid, i);
             let template = r#"
                 texture _{0}_tex < string ResourceName = "{1}"; >;
                 sampler _{0}_sampler = sampler_state {
@@ -333,6 +354,31 @@ fn code_gen_sampler(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap
                 "#.to_owned();
             let template = template.replace("{0}", &i.to_string());
             let template = template.replace("{1}", &node_custom_data[nid].replace('\\', "\\\\"));
+            sampler_code += &template;
+        }
+        else if my_node_type == MyNodeType::ControlObject {
+            let record = node_custom_data[&node_id].clone();
+            let records: Vec<_> = record.split('`').collect();
+            let template = if records[1].len() == 0 {
+                r#"float _{0}_ctrobj : CONTROLOBJECT < string name = "{1}"; >;"#
+            }
+            else {
+                r#"float _{0}_ctrobj : CONTROLOBJECT < string name = "{1}"; string item = "{2}"; >;"#
+            }.to_string();
+            let template = template.replace("{0}", &i.to_string());
+            let template = template.replace("{1}", records[0]);
+            let template = template.replace("{2}", records[1]);
+            sampler_code += &template;
+        }
+        else if my_node_type == MyNodeType::ControlObject {
+            let record = node_custom_data[&node_id].clone();
+            let records: Vec<_> = record.split('`').collect();
+            let template = {
+                r#"float3 _{0}_ctrobj : CONTROLOBJECT < string name = "{1}"; string item = "{2}"; >;"#
+            }.to_string();
+            let template = template.replace("{0}", &i.to_string());
+            let template = template.replace("{1}", records[0]);
+            let template = template.replace("{2}", records[1]);
             sampler_code += &template;
         }
         else if my_node_type == MyNodeType::Main {
@@ -438,6 +484,12 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
         }
         else if my_node_type == MyNodeType::CustomTexture2D {
             params += &format!(", _{}_sampler", samplers[nid]);
+        }
+        else if my_node_type == MyNodeType::ControlObject {
+            params += &format!("_{}_ctrobj", samplers[nid]);
+        }
+        else if my_node_type == MyNodeType::ControlObject3 {
+            params += &format!("_{}_ctrobj", samplers[nid]);
         }
         let output_sockets = &NODE_TYPE_INFOS[&my_node_type].output_sockets;
         if output_sockets.len() > 0 {
@@ -575,6 +627,13 @@ fn code_gen_vertex_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<N
         else if my_node_type == MyNodeType::CustomTexture2D {
             params += &format!(", _{}_sampler", samplers[nid]);
         }
+        else if my_node_type == MyNodeType::ControlObject {
+            params += &format!("_{}_ctrobj", samplers[nid]);
+        }
+        else if my_node_type == MyNodeType::ControlObject3 {
+            params += &format!("_{}_ctrobj", samplers[nid]);
+        }
+
         let output_sockets = &NODE_TYPE_INFOS[&my_node_type].output_sockets;
         if output_sockets.len() > 0 {
             for k in 1..output_sockets.len() {
