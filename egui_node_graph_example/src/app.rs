@@ -214,7 +214,7 @@ impl NodeTypeTrait for MyNodeType {
                 responses.push(NodeResponse::User(MyResponse::ValueChanged));
             }
         }
-        else if node_type == MyNodeType::ControlObject {
+        else if node_type == MyNodeType::ControlObject || node_type == MyNodeType::ControlObject3 {
             node_custom_data.entry(node_id).or_insert("(self)`".to_string());
             let record = node_custom_data[&node_id].clone();
             let records: Vec<_> = record.split('`').collect();
@@ -370,7 +370,7 @@ fn code_gen_sampler(graph: &MyGraph, node_id: NodeId, node_custom_data: &HashMap
             let template = template.replace("{2}", records[1]);
             sampler_code += &template;
         }
-        else if my_node_type == MyNodeType::ControlObject {
+        else if my_node_type == MyNodeType::ControlObject3 {
             let record = node_custom_data[&node_id].clone();
             let records: Vec<_> = record.split('`').collect();
             let template = {
