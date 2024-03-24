@@ -159,6 +159,9 @@ pub enum MyNodeType {
     AdjustHsv,
     ControlObject,
     ControlObject3,
+    SrgbToLinear,
+    LinearToSrgb,
+    ToneMappingReinhard,
 }
 
 pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
@@ -767,6 +770,36 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             categories: vec!["Utility".into()],
             input_sockets: vec![
                 InputSocketType { name: "v".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::SrgbToLinear, NodeTypeInfo {
+            label: "SrgbToLinear".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+                InputSocketType { name: "color".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::LinearToSrgb, NodeTypeInfo {
+            label: "LinearToSrgb".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+                InputSocketType { name: "color".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
+            ],
+        }),
+        (MyNodeType::ToneMappingReinhard, NodeTypeInfo {
+            label: "ToneMappingReinhard".into(),
+            categories: vec!["Utility".into()],
+            input_sockets: vec![
+                InputSocketType { name: "color".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 }
