@@ -96,7 +96,7 @@ float TimeFree() {
 }
 
 float3 NrmWS(float3 v) {
-    return v;
+    return normalize(v);
 }
 
 float3 NrmVS(float3 v) {
@@ -414,6 +414,46 @@ float3 FresnelSchlick(float cosTheta, float3 F0) {
     return lerp(F0, 1.0, pow(saturate(1.0 - cosTheta), 5.0));
 }
 
+float3 LightPointRadiance(float3 lightPosWS, float3 lightColor, float intensity, float3 posWS, out float3 lightDirWS) {
+    lightDirWS = normalize(lightPosWS - posWS);
+    float distance = length(lightPosWS - posWS);
+    return lightColor * intensity / (distance * distance);
+}
+
+float3 PBR(float3 radiance, float3 lightDirWS, float roughness, float metallic, float3 albedo, float3 N, float3 V, float3 posWS) {
+    float3 F0 = 0.04;
+    F0 = lerp(F0, albedo, metallic);
+    // calculate per-light radiance
+    float3 L = normalize(lightDirWS);
+    float3 H = normalize(V + L);
+
+    // Cook-Torrance BRDF
+    float  NDF = DistributionGGX(N, H, roughness);
+    float  G   = GeometrySmith(N, V, L, roughness);
+    float3 F   = FresnelSchlick(saturate(dot(H, V)), F0);
+
+    float3 numerator    = NDF * G * F;
+    float denominator = 4.0 * max(dot(N, V), 0.0) * max(dot(N, L), 0.0);
+    float3 specular = numerator / max(denominator, 0.0001); // max with 0.0001 to prevent divide by zero
+
+    // kS is equal to Fresnel
+    float3 kS = F;
+    // for energy conservation, the diffuse and specular light can't
+    // be above 1.0 (unless the surface emits light); to preserve this
+    // relationship the diffuse component (kD) should equal 1.0 - kS.
+    float3 kD = 1.0 - kS;
+    // multiply kD by the inverse metalness such that only non-metals
+    // have diffuse lighting, or a linear blend if partly metal (pure metals
+    // have no diffuse light).
+    kD *= 1.0 - metallic;
+
+    // scale light by NdotL
+    float NdotL = max(dot(N, L), 0.0);
+
+    // add to outgoing radiance Lo
+    float3 Lo = (kD * albedo / PI + specular) * radiance * NdotL;  // note that we already multiplied the BRDF by the Fresnel (kS) so we won't multiply by kS again
+    return Lo;
+}
 VS_OUTPUT Basic_VS(float4 pos: POSITION, float3 normal: NORMAL, float2 uv: TEXCOORD0, float4 uv1: TEXCOORD1) {
     VS_OUTPUT vso;
     float3 posWS = pos.xyz;

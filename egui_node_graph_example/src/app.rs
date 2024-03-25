@@ -491,6 +491,12 @@ fn code_gen_pixel_shader(graph: &MyGraph, node_id: NodeId, samplers: &HashMap<No
         else if my_node_type == MyNodeType::ControlObject3 {
             params += &format!("_{}_ctrobj", samplers[nid]);
         }
+        else if my_node_type == MyNodeType::PBR {
+            params += ", NrmWS(vso.nrm), ViewDirWS(vso.posWS), vso.posWS";
+        }
+        else if my_node_type == MyNodeType::LightPointRadiance {
+            params += ", vso.posWS";
+        }
         let output_sockets = &NODE_TYPE_INFOS[&my_node_type].output_sockets;
         if output_sockets.len() > 0 {
             for k in 1..output_sockets.len() {

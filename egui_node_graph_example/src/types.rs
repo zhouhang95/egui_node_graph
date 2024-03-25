@@ -162,6 +162,8 @@ pub enum MyNodeType {
     SrgbToLinear,
     LinearToSrgb,
     ToneMappingReinhard,
+    PBR,
+    LightPointRadiance,
 }
 
 pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(|| {
@@ -415,6 +417,34 @@ pub static NODE_TYPE_INFOS: Lazy<HashMap<MyNodeType, NodeTypeInfo>> = Lazy::new(
             ],
             output_sockets: vec![
                 OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+            ],
+        }),
+        // lightPosition, float3 lightColor, float roughness, float metallic
+        (MyNodeType::PBR, NodeTypeInfo {
+            label: "PBR".into(),
+            categories: vec!["Shader".into()],
+            input_sockets: vec![
+                InputSocketType { name: "radiance".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::vector(1.0, 1.0, 1.0)) },
+                InputSocketType { name: "lightDir".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+                InputSocketType { name: "roughness".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
+                InputSocketType { name: "metallic".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::default_scalar()) },
+                InputSocketType { name: "albedo".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::vector(1.0, 1.0, 1.0)) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+            ],
+        }),
+        (MyNodeType::LightPointRadiance, NodeTypeInfo {
+            label: "LightPointRadiance".into(),
+            categories: vec!["Shader".into()],
+            input_sockets: vec![
+                InputSocketType { name: "lightPosWS".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::default_vector()) },
+                InputSocketType { name: "lightColor".into(), ty: MyDataType::Vec3, default: Ok(MyValueType::vector(1.0, 1.0, 1.0)) },
+                InputSocketType { name: "intensity".into(), ty: MyDataType::Scalar, default: Ok(MyValueType::scalar(1.0)) },
+            ],
+            output_sockets: vec![
+                OutputSocketType { name: "out".into(), ty: MyDataType::Vec3 },
+                OutputSocketType { name: "lightDirWS".into(), ty: MyDataType::Vec3 },
             ],
         }),
         (MyNodeType::LightDirWS, NodeTypeInfo {
